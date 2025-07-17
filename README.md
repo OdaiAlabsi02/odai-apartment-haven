@@ -1,73 +1,91 @@
-# Welcome to your Lovable project
+# Odai's Apartment Booking Website
 
-## Project info
+## Project Goal
 
-**URL**: https://lovable.dev/projects/73a60d66-5e20-480b-9d78-0580109f6f35
+Build a personal website to list and rent my short-term rental apartments. The goal is to avoid commissions from Airbnb and Booking.com by allowing guests to book directly through my own website.
 
-## How can I edit this code?
+I currently manage 2 apartments and may add 2 more in the future.
 
-There are several ways of editing your application.
+## Website Pages
 
-**Use Lovable**
+The website will include the following pages:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/73a60d66-5e20-480b-9d78-0580109f6f35) and start prompting.
+- **Homepage**
+- **Apartments List**
+- **Apartment Details Page**
+- **Booking Page**
+- **Booking Confirmation Page**
+- **Contact Page**
+- **Admin Dashboard (Private)**
 
-Changes made via Lovable will be committed automatically to this repo.
+## Core Features
 
-**Use your preferred IDE**
+### 🧭 Pages
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. **Homepage**
+   - Welcome section
+   - Short intro about the apartments
+   - Featured property preview cards
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. **Apartments List**
+   - Grid of all available apartments
+   - Each card includes: name, image, price per night, location, “View Details” button
 
-Follow these steps:
+3. **Apartment Details Page**
+   - Photo gallery
+   - Description
+   - Amenities list
+   - Availability calendar
+   - "Book Now" button
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. **Booking Page**
+   - Date picker (check-in & check-out)
+   - Guest count
+   - Contact form: name, phone, email
+   - Submit booking
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+5. **Booking Confirmation Page**
+   - Thank you message
+   - Summary of booking
 
-# Step 3: Install the necessary dependencies.
-npm i
+6. **Contact Page**
+   - Basic contact form or contact details
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+7. **Admin Dashboard (Private)**
+   - Simple login (or just password-protected)
+   - View list of all bookings
+   - Mark bookings as confirmed or pending
 
-**Edit a file directly in GitHub**
+## Functionality
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- View available apartments
+- View apartment details
+- Choose check-in/check-out dates
+- Submit booking form
+- Store booking in a Supabase database
+- Notify admin (me) when a booking is submitted
+- View bookings in admin area
 
-**Use GitHub Codespaces**
+## Design Preferences
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Clean, minimalist design
+- Mobile-friendly (responsive)
+- Similar feeling to Airbnb (but simpler)
+- Use soft colors like white, beige, gray, and maybe green or gold highlights
 
-## What technologies are used for this project?
+## Booking Flow (User Journey)
 
-This project is built with:
+1. User opens homepage
+2. Browses available apartments
+3. Clicks to view one apartment
+4. Selects check-in & check-out dates
+5. Fills booking form
+6. Sees confirmation message
+7. Admin receives booking and follows up manually
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Notes
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/73a60d66-5e20-480b-9d78-0580109f6f35) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- I will be adding apartment photos and text content myself
+- The booking can be confirmed manually — no need for automatic payment right now
+- All data (apartments, bookings) should be saved using **Supabase**
+- Please use file and folder structure best suited for a modern web app

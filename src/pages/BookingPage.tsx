@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Calendar, Users, Mail, Phone, User, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,20 +8,48 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apartments } from "@/data/apartments";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../contexts/AuthContext";
 
 export const BookingPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const apartment = apartments.find(apt => apt.id === id);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const session = supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        navigate("/login", { replace: true });
+      }
+    });
+  }, [navigate]);
+
+  useEffect(() => {
+    async function checkProfile() {
+      if (user) {
+        const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+        setProfile(data);
+        if (!data?.first_name || !data?.last_name || !data?.phone) {
+          toast({
+            variant: "destructive",
+            title: "Complete Your Profile",
+            description: "Please add your first name, last name, and phone number before booking.",
+          });
+          navigate("/profile");
+        }
+      }
+    }
+    checkProfile();
+  }, [user, navigate, toast]);
 
   const [formData, setFormData] = useState({
     checkIn: "",
     checkOut: "",
     guests: "1",
-    guestName: "",
-    guestEmail: "",
-    guestPhone: "",
+    paymentMethod: "cash",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -60,9 +88,7 @@ export const BookingPage = () => {
 
     if (!formData.checkIn) newErrors.checkIn = "Check-in date is required";
     if (!formData.checkOut) newErrors.checkOut = "Check-out date is required";
-    if (!formData.guestName.trim()) newErrors.guestName = "Guest name is required";
-    if (!formData.guestEmail.trim()) newErrors.guestEmail = "Email is required";
-    if (!formData.guestPhone.trim()) newErrors.guestPhone = "Phone number is required";
+    // No guestName, guestEmail, guestPhone validation
 
     if (formData.checkIn && formData.checkOut) {
       const checkIn = new Date(formData.checkIn);
@@ -76,10 +102,6 @@ export const BookingPage = () => {
       if (checkOut <= checkIn) {
         newErrors.checkOut = "Check-out date must be after check-in date";
       }
-    }
-
-    if (formData.guestEmail && !/\S+@\S+\.\S+/.test(formData.guestEmail)) {
-      newErrors.guestEmail = "Please enter a valid email address";
     }
 
     setErrors(newErrors);
@@ -197,56 +219,19 @@ export const BookingPage = () => {
                       </Select>
                     </div>
 
-                    {/* Guest Information */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Guest Information</h3>
-                      
-                      <div>
-                        <Label htmlFor="guestName">Full Name</Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="guestName"
-                            value={formData.guestName}
-                            onChange={(e) => handleChange("guestName", e.target.value)}
-                            placeholder="Enter your full name"
-                            className="pl-10"
-                          />
-                        </div>
-                        {errors.guestName && <p className="text-destructive text-sm mt-1">{errors.guestName}</p>}
-                      </div>
-
-                      <div>
-                        <Label htmlFor="guestEmail">Email Address</Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="guestEmail"
-                            type="email"
-                            value={formData.guestEmail}
-                            onChange={(e) => handleChange("guestEmail", e.target.value)}
-                            placeholder="Enter your email"
-                            className="pl-10"
-                          />
-                        </div>
-                        {errors.guestEmail && <p className="text-destructive text-sm mt-1">{errors.guestEmail}</p>}
-                      </div>
-
-                      <div>
-                        <Label htmlFor="guestPhone">Phone Number</Label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="guestPhone"
-                            type="tel"
-                            value={formData.guestPhone}
-                            onChange={(e) => handleChange("guestPhone", e.target.value)}
-                            placeholder="Enter your phone number"
-                            className="pl-10"
-                          />
-                        </div>
-                        {errors.guestPhone && <p className="text-destructive text-sm mt-1">{errors.guestPhone}</p>}
-                      </div>
+                    {/* Payment Method */}
+                    <div>
+                      <Label htmlFor="paymentMethod">Payment Method</Label>
+                      <Select value={formData.paymentMethod} onValueChange={(value) => handleChange("paymentMethod", value)}>
+                        <SelectTrigger>
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cash">Cash</SelectItem>
+                          <SelectItem value="credit">Credit</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <Button type="submit" className="w-full bg-button-gradient hover:opacity-90 transition-opacity">
