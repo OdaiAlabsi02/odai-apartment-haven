@@ -23,6 +23,7 @@ import MessagesPage from "./pages/admin/MessagesPage";
 import UsersPage from "./pages/admin/UsersPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import DashboardPage from "./pages/admin/DashboardPage";
+import AmenitiesPage from "./pages/admin/AmenitiesPage";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
                 <Route index element={<DashboardPage />} />
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="listings" element={<ListingsPage />} />
+                <Route path="amenities" element={<AmenitiesPage />} />
                 <Route path="bookings" element={<BookingsPage />} />
                 <Route path="messages" element={<MessagesPage />} />
                 <Route path="users" element={<UsersPage />} />

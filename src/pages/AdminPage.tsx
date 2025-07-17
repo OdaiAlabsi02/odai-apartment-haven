@@ -148,10 +148,29 @@ export const AdminPage = () => {
   return (
     <div className="flex min-h-screen bg-background">
       <AdminSidebar />
-      <main className="flex-1 p-8">
-        <button onClick={handleLogout} className="mb-4 ml-auto block">Logout</button>
-        <Outlet />
-      </main>
+      <div className="flex-1 flex flex-col">
+        {/* Admin Header */}
+        <header className="bg-card border-b border-border px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg font-semibold">Administrator Dashboard</h2>
+            </div>
+            <Button 
+              onClick={handleLogout} 
+              variant="outline" 
+              size="sm"
+              className="hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </header>
+        {/* Main Content */}
+        <main className="flex-1 p-8 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
