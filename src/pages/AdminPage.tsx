@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { mockBookings, Booking } from "@/data/bookings";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { Outlet } from "react-router-dom";
+import { supabase } from "@/lib/supabaseClient";
+import { FcGoogle } from "react-icons/fc";
 
 export const AdminPage = () => {
   const { toast } = useToast();
@@ -17,6 +19,7 @@ export const AdminPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>(mockBookings);
+  const [loading, setLoading] = useState(false);
 
   // Check if already authenticated
   useEffect(() => {
@@ -26,10 +29,62 @@ export const AdminPage = () => {
     }
   }, []);
 
+  // Handle Google OAuth login
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/admin",
+      },
+    });
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Google Login Failed",
+        description: error.message,
+      });
+      setLoading(false);
+    }
+  };
+
+  // Check for Supabase session and admin role after OAuth
+  useEffect(() => {
+    const checkAdmin = async () => {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Fetch profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        if (profile?.role === "admin") {
+          setIsAuthenticated(true);
+          localStorage.setItem("adminAuthenticated", "true");
+          toast({
+            title: "Access Granted",
+            description: "Welcome to the admin dashboard!",
+          });
+        } else if (profile) {
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You are not an admin.",
+          });
+          await supabase.auth.signOut();
+        }
+      }
+      setLoading(false);
+    };
+    checkAdmin();
+    // Only run on mount or after OAuth redirect
+    // eslint-disable-next-line
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Simple password check - in real app, this would be properly secured
     if (password === "admin123") {
       setIsAuthenticated(true);
       localStorage.setItem("adminAuthenticated", "true");
@@ -46,10 +101,11 @@ export const AdminPage = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsAuthenticated(false);
     localStorage.removeItem("adminAuthenticated");
     setPassword("");
+    await supabase.auth.signOut();
     toast({
       title: "Logged Out",
       description: "You have been logged out successfully.",
@@ -97,7 +153,7 @@ export const AdminPage = () => {
             </div>
             <CardTitle>Admin Access</CardTitle>
             <p className="text-muted-foreground">
-              Enter your password to access the admin dashboard
+              Enter your password or use Google to access the admin dashboard
             </p>
           </CardHeader>
           <CardContent>
@@ -134,11 +190,28 @@ export const AdminPage = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-button-gradient hover:opacity-90 transition-opacity"
+                disabled={loading}
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Access Dashboard
               </Button>
             </form>
+            <div className="my-4 flex items-center justify-center">
+              <span className="text-muted-foreground text-xs">or</span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full flex items-center gap-2"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+            >
+              <FcGoogle className="h-5 w-5" />
+              Sign in with Google
+            </Button>
+            {loading && (
+              <div className="text-center text-xs text-muted-foreground mt-2">Checking admin access...</div>
+            )}
           </CardContent>
         </Card>
       </div>

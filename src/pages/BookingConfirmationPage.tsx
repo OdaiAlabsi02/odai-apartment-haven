@@ -77,7 +77,7 @@ export const BookingConfirmationPage = () => {
               {/* Apartment Info */}
               <div className="flex space-x-4">
                 <img
-                  src={bookingData.apartment.images[0]}
+                  src={bookingData.apartment.primary_image || bookingData.apartment.image_urls?.[0] || '/placeholder.svg'}
                   alt={bookingData.apartment.name}
                   className="w-20 h-20 object-cover rounded-lg"
                 />
@@ -87,9 +87,9 @@ export const BookingConfirmationPage = () => {
                     <MapPin className="h-3 w-3 mr-1" />
                     {bookingData.apartment.location}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    ${bookingData.apartment.pricePerNight} per night
-                  </p>
+                  <div className="text-sm text-muted-foreground">
+                    ${bookingData.apartment.price_per_night} per night
+                  </div>
                 </div>
               </div>
 
@@ -160,7 +160,7 @@ export const BookingConfirmationPage = () => {
                 <h4 className="font-medium mb-3">Price Breakdown</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>${bookingData.apartment.pricePerNight} × {bookingData.nights} nights</span>
+                    <span>${bookingData.apartment.price_per_night} × {bookingData.nights} nights</span>
                     <span>${bookingData.totalPrice}</span>
                   </div>
                   <div className="flex justify-between font-semibold pt-2 border-t">

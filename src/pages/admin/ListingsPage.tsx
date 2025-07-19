@@ -4,91 +4,114 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, MapPin, Users, Bed, Bath, DollarSign, Search, Star } from "lucide-react";
-import { apartments, Apartment } from "@/data/apartments";
+import { Plus, Edit, Trash2, MapPin, Users, Bed, Bath, DollarSign, Search, Star, Loader2, FileX } from "lucide-react";
+import { Apartment } from "@/data/apartments";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useApartments } from "@/hooks/useApartments";
 
 export default function ListingsPage() {
-  const [listings, setListings] = useState<Apartment[]>(apartments);
+  const { apartments: listings, loading, error, deleteApartment, updateApartment } = useApartments();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingListing, setEditingListing] = useState<Apartment | null>(null);
   const { toast } = useToast();
-
-  const [newListing, setNewListing] = useState({
-    name: "",
-    location: "",
-    pricePerNight: 0,
-    description: "",
-    maxGuests: 1,
-    bedrooms: 1,
-    bathrooms: 1,
-    images: [""],
-    amenities: [] as string[],
-    featured: false
-  });
+  const navigate = useNavigate();
 
   const filteredListings = listings.filter(listing =>
     listing.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     listing.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddListing = () => {
-    if (!newListing.name || !newListing.location || newListing.pricePerNight <= 0) {
+  const handleDeleteListing = async (id: string) => {
+    try {
+      await deleteApartment(id);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please fill in all required fields."
+        title: "Deleted",
+        description: "Listing deleted successfully."
       });
-      return;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete listing.",
+        variant: "destructive"
+      });
     }
+  };
 
-    const listing: Apartment = {
-      id: Date.now().toString(),
-      ...newListing,
-      images: newListing.images.filter(img => img.trim() !== "")
-    };
+  const toggleFeatured = async (id: string) => {
+    try {
+      const listing = listings.find(l => l.id === id);
+      if (listing) {
+        await updateApartment(id, { featured: !listing.featured });
+        toast({
+          title: "Updated",
+          description: "Listing featured status updated."
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update listing.",
+        variant: "destructive"
+      });
+    }
+  };
 
-    setListings([...listings, listing]);
-    setNewListing({
-      name: "",
-      location: "",
-      pricePerNight: 0,
-      description: "",
-      maxGuests: 1,
-      bedrooms: 1,
-      bathrooms: 1,
-      images: [""],
-      amenities: [],
-      featured: false
-    });
-    setIsAddDialogOpen(false);
+  const clearDrafts = () => {
+    // Clear all draft data from sessionStorage
+    const keysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith('listingStep')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => sessionStorage.removeItem(key));
+    
     toast({
-      title: "Success",
-      description: "Listing added successfully!"
+      title: "Drafts Cleared",
+      description: "All saved drafts have been cleared successfully."
     });
   };
 
-  const handleDeleteListing = (id: string) => {
-    setListings(listings.filter(listing => listing.id !== id));
-    toast({
-      title: "Deleted",
-      description: "Listing deleted successfully."
-    });
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading listings...</span>
+        </div>
+      </div>
+    );
+  }
 
-  const toggleFeatured = (id: string) => {
-    setListings(listings.map(listing =>
-      listing.id === id ? { ...listing, featured: !listing.featured } : listing
-    ));
-    toast({
-      title: "Updated",
-      description: "Listing featured status updated."
-    });
-  };
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Listings Management</h1>
+            <p className="text-muted-foreground">Manage all apartment listings and their details</p>
+          </div>
+          <Button className="bg-button-gradient hover:opacity-90 transition-opacity" onClick={() => navigate("/admin/add-listing")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Listing
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-2">Error Loading Listings</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <p className="text-sm text-muted-foreground">Using demo data as fallback</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -97,102 +120,20 @@ export default function ListingsPage() {
           <h1 className="text-3xl font-bold">Listings Management</h1>
           <p className="text-muted-foreground">Manage all apartment listings and their details</p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-button-gradient hover:opacity-90 transition-opacity">
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Listing
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Listing</DialogTitle>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Property Name *</Label>
-                <Input
-                  id="name"
-                  value={newListing.name}
-                  onChange={(e) => setNewListing({...newListing, name: e.target.value})}
-                  placeholder="Modern Downtown Loft"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="location">Location *</Label>
-                <Input
-                  id="location"
-                  value={newListing.location}
-                  onChange={(e) => setNewListing({...newListing, location: e.target.value})}
-                  placeholder="City Center, Downtown"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Price per Night *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={newListing.pricePerNight}
-                  onChange={(e) => setNewListing({...newListing, pricePerNight: Number(e.target.value)})}
-                  placeholder="120"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="maxGuests">Max Guests</Label>
-                <Input
-                  id="maxGuests"
-                  type="number"
-                  value={newListing.maxGuests}
-                  onChange={(e) => setNewListing({...newListing, maxGuests: Number(e.target.value)})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bedrooms">Bedrooms</Label>
-                <Input
-                  id="bedrooms"
-                  type="number"
-                  value={newListing.bedrooms}
-                  onChange={(e) => setNewListing({...newListing, bedrooms: Number(e.target.value)})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bathrooms">Bathrooms</Label>
-                <Input
-                  id="bathrooms"
-                  type="number"
-                  value={newListing.bathrooms}
-                  onChange={(e) => setNewListing({...newListing, bathrooms: Number(e.target.value)})}
-                />
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={newListing.description}
-                  onChange={(e) => setNewListing({...newListing, description: e.target.value})}
-                  placeholder="Describe your property..."
-                  rows={3}
-                />
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <Label>Image URL</Label>
-                <Input
-                  value={newListing.images[0]}
-                  onChange={(e) => setNewListing({...newListing, images: [e.target.value]})}
-                  placeholder="https://images.unsplash.com/..."
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddListing} className="bg-button-gradient hover:opacity-90">
-                Add Listing
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={clearDrafts}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <FileX className="h-4 w-4 mr-2" />
+            Clear Drafts
+          </Button>
+          <Button className="bg-button-gradient hover:opacity-90 transition-opacity" onClick={() => navigate("/admin/add-listing/step1")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Listing
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -230,39 +171,42 @@ export default function ListingsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredListings.map((listing) => (
-                    <TableRow key={listing.id}>
+                    <TableRow key={listing.id} className={listing.is_draft ? "opacity-60 bg-muted/30" : ""}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <img
-                            src={listing.images[0]}
+                            src={listing.primary_image || listing.image_urls?.[0] || '/placeholder.svg'}
                             alt={listing.name}
-                            className="w-16 h-16 rounded-lg object-cover"
+                            className={`w-16 h-16 rounded-lg object-cover ${listing.is_draft ? "grayscale" : ""}`}
                           />
                           <div>
-                            <div className="font-medium">{listing.name}</div>
+                            <div className={`font-medium ${listing.is_draft ? "text-muted-foreground" : ""}`}>
+                              {listing.name}
+                              {listing.is_draft && " (Draft)"}
+                            </div>
                             <div className="text-sm text-muted-foreground">
-                              {listing.amenities.length} amenities
+                              {Object.entries(listing).filter(([key, value]) => typeof value === 'boolean' && value).length} amenities
                             </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center text-sm">
+                        <div className={`flex items-center text-sm ${listing.is_draft ? "text-muted-foreground" : ""}`}>
                           <MapPin className="h-3 w-3 mr-1" />
                           {listing.location}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center font-medium">
+                        <div className={`flex items-center font-medium ${listing.is_draft ? "text-muted-foreground" : ""}`}>
                           <DollarSign className="h-4 w-4" />
-                          {listing.pricePerNight}/night
+                          ${listing.price_per_night}/night
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className={`flex items-center gap-4 text-sm ${listing.is_draft ? "text-muted-foreground" : "text-muted-foreground"}`}>
                           <div className="flex items-center">
                             <Users className="h-3 w-3 mr-1" />
-                            {listing.maxGuests}
+                            {listing.max_guests} guests
                           </div>
                           <div className="flex items-center">
                             <Bed className="h-3 w-3 mr-1" />
@@ -276,42 +220,79 @@ export default function ListingsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {listing.featured && (
-                            <Badge variant="secondary" className="bg-accent text-accent-foreground">
-                              <Star className="h-3 w-3 mr-1" />
-                              Featured
+                          {listing.is_draft ? (
+                            <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                              Draft
                             </Badge>
+                          ) : (
+                            <>
+                              {listing.featured && (
+                                <Badge variant="secondary" className="bg-accent text-accent-foreground">
+                                  <Star className="h-3 w-3 mr-1" />
+                                  Featured
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-success border-success">
+                                Active
+                              </Badge>
+                            </>
                           )}
-                          <Badge variant="outline" className="text-success border-success">
-                            Active
-                          </Badge>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleFeatured(listing.id)}
-                            className="text-accent hover:text-accent"
-                          >
-                            <Star className={`h-4 w-4 ${listing.featured ? 'fill-current' : ''}`} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-primary hover:text-primary"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteListing(listing.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {listing.is_draft ? (
+                            // Draft actions: Complete (edit) and Delete only
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-primary hover:text-primary"
+                                title="Complete Draft"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteListing(listing.id)}
+                                className="text-destructive hover:text-destructive"
+                                title="Delete Draft"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            // Published listing actions: Featured toggle, Edit, Delete
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleFeatured(listing.id)}
+                                className="text-accent hover:text-accent"
+                                title="Toggle Featured"
+                              >
+                                <Star className={`h-4 w-4 ${listing.featured ? 'fill-current' : ''}`} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-primary hover:text-primary"
+                                title="Edit Listing"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteListing(listing.id)}
+                                className="text-destructive hover:text-destructive"
+                                title="Delete Listing"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

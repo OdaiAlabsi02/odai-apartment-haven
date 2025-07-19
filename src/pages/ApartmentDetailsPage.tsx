@@ -1,21 +1,55 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { MapPin, Users, Bed, Bath, Calendar, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { MapPin, Users, Bed, Bath, Calendar, ChevronLeft, ChevronRight, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { apartments } from "@/data/apartments";
+import { useApartments } from "@/hooks/useApartments";
 
 export const ApartmentDetailsPage = () => {
   const { id } = useParams();
+  const { apartments, loading, error } = useApartments();
   const apartment = apartments.find(apt => apt.id === id);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Debug logging
+  console.log('ApartmentDetailsPage - ID from URL:', id);
+  console.log('ApartmentDetailsPage - Available apartments:', apartments);
+  console.log('ApartmentDetailsPage - Found apartment:', apartment);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex items-center gap-2 mb-4">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Loading apartment details...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error Loading Apartment</h1>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Link to="/apartments">
+            <Button variant="outline">Back to Apartments</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!apartment) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Apartment Not Found</h1>
+          <p className="text-muted-foreground mb-4">The apartment you're looking for doesn't exist or has been removed.</p>
           <Link to="/apartments">
             <Button variant="outline">Back to Apartments</Button>
           </Link>
@@ -25,14 +59,16 @@ export const ApartmentDetailsPage = () => {
   }
 
   const nextImage = () => {
+    const imageArray = apartment.image_urls || [];
     setCurrentImageIndex((prev) => 
-      prev === apartment.images.length - 1 ? 0 : prev + 1
+      prev === imageArray.length - 1 ? 0 : prev + 1
     );
   };
 
   const prevImage = () => {
+    const imageArray = apartment.image_urls || [];
     setCurrentImageIndex((prev) => 
-      prev === 0 ? apartment.images.length - 1 : prev - 1
+      prev === 0 ? imageArray.length - 1 : prev - 1
     );
   };
 
@@ -50,12 +86,12 @@ export const ApartmentDetailsPage = () => {
           <div className="space-y-4">
             <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
               <img
-                src={apartment.images[currentImageIndex]}
+                src={apartment.primary_image || apartment.image_urls?.[currentImageIndex] || '/placeholder.svg'}
                 alt={apartment.name}
                 className="w-full h-full object-cover"
               />
               
-              {apartment.images.length > 1 && (
+              {(apartment.image_urls?.length || 0) > 1 && (
                 <>
                   <Button
                     variant="secondary"
@@ -77,7 +113,7 @@ export const ApartmentDetailsPage = () => {
               )}
 
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                {apartment.images.map((_, index) => (
+                {(apartment.image_urls || []).map((_, index) => (
                   <button
                     key={index}
                     className={`w-2 h-2 rounded-full transition-colors ${
@@ -91,7 +127,7 @@ export const ApartmentDetailsPage = () => {
 
             {/* Thumbnail Strip */}
             <div className="grid grid-cols-3 gap-2">
-              {apartment.images.slice(0, 3).map((image, index) => (
+              {(apartment.image_urls || []).slice(0, 3).map((image, index) => (
                 <button
                   key={index}
                   className={`aspect-[4/3] overflow-hidden rounded-lg border-2 transition-colors ${
@@ -124,7 +160,7 @@ export const ApartmentDetailsPage = () => {
               <div className="flex items-center space-x-6 text-sm">
                 <div className="flex items-center">
                   <Users className="h-4 w-4 mr-1" />
-                  <span>{apartment.maxGuests} guests</span>
+                  <span>{apartment.max_guests} guests</span>
                 </div>
                 <div className="flex items-center">
                   <Bed className="h-4 w-4 mr-1" />
@@ -139,7 +175,7 @@ export const ApartmentDetailsPage = () => {
 
             <div className="bg-primary/5 rounded-xl p-6">
               <div className="text-2xl font-bold mb-2">
-                ${apartment.pricePerNight}
+                ${apartment.price_per_night}
                 <span className="text-base font-normal text-muted-foreground"> / night</span>
               </div>
               <p className="text-muted-foreground mb-4">Plus taxes and fees</p>
@@ -159,12 +195,15 @@ export const ApartmentDetailsPage = () => {
             <div>
               <h2 className="text-xl font-semibold mb-3">Amenities</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {apartment.amenities.map((amenity, index) => (
-                  <div key={index} className="flex items-center">
-                    <Check className="h-4 w-4 text-success mr-2" />
-                    <span className="text-sm">{amenity}</span>
-                  </div>
-                ))}
+                {/* Convert boolean amenities to array */}
+                {Object.entries(apartment)
+                  .filter(([key, value]) => typeof value === 'boolean' && value)
+                  .map(([key, _]) => (
+                    <div key={key} className="flex items-center">
+                      <Check className="h-4 w-4 text-success mr-2" />
+                      <span className="text-sm">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                    </div>
+                  ))}
               </div>
             </div>
           </div>
@@ -181,7 +220,7 @@ export const ApartmentDetailsPage = () => {
                 <Card key={apt.id} className="overflow-hidden border-0 shadow-card hover:shadow-card-hover transition-all duration-300">
                   <div className="aspect-[4/3] overflow-hidden">
                     <img
-                      src={apt.images[0]}
+                      src={apt.primary_image || apt.image_urls?.[0] || '/placeholder.svg'}
                       alt={apt.name}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     />
@@ -189,7 +228,7 @@ export const ApartmentDetailsPage = () => {
                   <CardContent className="p-4">
                     <h3 className="font-semibold mb-1">{apt.name}</h3>
                     <p className="text-muted-foreground text-sm mb-2">{apt.location}</p>
-                    <p className="font-semibold">${apt.pricePerNight}/night</p>
+                    <p className="font-semibold">${apt.price_per_night}/night</p>
                     <Link to={`/apartment/${apt.id}`} className="block mt-3">
                       <Button variant="outline" size="sm" className="w-full">
                         View Details

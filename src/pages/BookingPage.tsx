@@ -78,9 +78,8 @@ export const BookingPage = () => {
     return 0;
   };
 
-  const calculateTotal = () => {
-    const nights = calculateNights();
-    return nights * apartment.pricePerNight;
+  const calculateTotal = (nights: number) => {
+    return nights * apartment.price_per_night;
   };
 
   const validateForm = () => {
@@ -125,7 +124,7 @@ export const BookingPage = () => {
       apartment,
       ...formData,
       nights: calculateNights(),
-      totalPrice: calculateTotal(),
+      totalPrice: calculateTotal(calculateNights()),
       bookingId: `booking-${Date.now()}`,
     };
 
@@ -210,7 +209,7 @@ export const BookingPage = () => {
                           <SelectValue placeholder="Select guests" />
                         </SelectTrigger>
                         <SelectContent>
-                          {Array.from({ length: apartment.maxGuests }, (_, i) => (
+                          {Array.from({ length: apartment.max_guests }, (_, i) => (
                             <SelectItem key={i + 1} value={(i + 1).toString()}>
                               {i + 1} Guest{i > 0 ? 's' : ''}
                             </SelectItem>
@@ -220,7 +219,7 @@ export const BookingPage = () => {
                     </div>
 
                     {/* Payment Method */}
-                    <div>
+                      <div>
                       <Label htmlFor="paymentMethod">Payment Method</Label>
                       <Select value={formData.paymentMethod} onValueChange={(value) => handleChange("paymentMethod", value)}>
                         <SelectTrigger>
@@ -251,7 +250,7 @@ export const BookingPage = () => {
                 <CardContent className="space-y-4">
                   <div className="flex space-x-3">
                     <img
-                      src={apartment.images[0]}
+                      src={apartment.primary_image || apartment.image_urls?.[0] || '/placeholder.svg'}
                       alt={apartment.name}
                       className="w-16 h-16 object-cover rounded-lg"
                     />
@@ -282,15 +281,15 @@ export const BookingPage = () => {
                     )}
                   </div>
 
-                  {calculateTotal() > 0 && (
+                  {calculateTotal(calculateNights()) > 0 && (
                     <div className="pt-4 border-t">
                       <div className="flex justify-between text-sm mb-2">
-                        <span>${apartment.pricePerNight} × {calculateNights()} nights</span>
-                        <span>${calculateTotal()}</span>
+                        <span>${apartment.price_per_night} × {calculateNights()} nights</span>
+                        <span>${calculateTotal(calculateNights())}</span>
                       </div>
                       <div className="flex justify-between font-semibold">
                         <span>Total:</span>
-                        <span>${calculateTotal()}</span>
+                        <span>${calculateTotal(calculateNights())}</span>
                       </div>
                     </div>
                   )}

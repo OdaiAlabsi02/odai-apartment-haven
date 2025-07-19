@@ -14,7 +14,7 @@ export const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
     <Card className="group overflow-hidden border-0 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1">
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
-          src={apartment.images[0]}
+          src={apartment.primary_image || apartment.image_urls?.[0] || '/placeholder.svg'}
           alt={apartment.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -24,7 +24,7 @@ export const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
           </Badge>
         )}
         <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg">
-          <span className="text-sm font-semibold">${apartment.pricePerNight}/night</span>
+          <span className="text-sm font-semibold">${apartment.price_per_night}/night</span>
         </div>
       </div>
 
@@ -41,7 +41,7 @@ export const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
           <div className="flex items-center space-x-3">
             <div className="flex items-center">
               <Users className="h-3 w-3 mr-1" />
-              <span>{apartment.maxGuests}</span>
+              <span>{apartment.max_guests}</span>
             </div>
             <div className="flex items-center">
               <Bed className="h-3 w-3 mr-1" />
