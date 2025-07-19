@@ -1,6 +1,11 @@
-import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -8,66 +13,89 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn, user } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    const { error } = await signIn(email, password);
+    
     setLoading(false);
-    if (error) setError(error.message);
-    else navigate('/');
-  };
-
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    setLoading(false);
-    if (error) setError(error.message);
-    // On success, Supabase will redirect automatically
+    if (error) {
+      setError(error.message);
+    } else {
+      navigate('/');
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <h2 className="text-2xl font-bold mb-4">Login</h2>
-      <form onSubmit={handleLogin} className="flex flex-col gap-4 w-80">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="border p-2 rounded"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="border p-2 rounded"
-          required
-        />
-        <button type="submit" className="bg-green-600 text-white p-2 rounded" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
-      <button
-        onClick={handleGoogleLogin}
-        className="mt-4 bg-blue-600 text-white p-2 rounded w-80"
-        disabled={loading}
-      >
-        {loading ? 'Redirecting...' : 'Sign in with Google'}
-      </button>
-      {error && <p className="text-red-600 mt-2">{error}</p>}
-      <div className="flex flex-col items-center mt-4 gap-2">
-        <span>
-          Don t have an account? <Link to="/signup" className="text-blue-600 underline">Sign up</Link>
-        </span>
-        <span>
-          <Link to="/forgot-password" className="text-blue-600 underline">Forgot password?</Link>
-        </span>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
+          <p className="text-center text-muted-foreground">
+            Sign in to your Jordan Stays account
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
+            </Button>
+          </form>
+          
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </p>
+            <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+              Forgot your password?
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 } 

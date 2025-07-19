@@ -30,8 +30,7 @@ import AddListingStep2Page from "./pages/admin/AddListingStep2Page";
 import AddListingStep3Page from "./pages/admin/AddListingStep3Page";
 import AddListingStep4Page from "./pages/admin/AddListingStep4Page";
 import AddListingStep5Page from "./pages/admin/AddListingStep5Page";
-import { supabase } from "@/lib/supabaseClient";
-import { useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -79,13 +78,15 @@ function AppWithRouterLogic() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppWithRouterLogic />
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppWithRouterLogic />
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

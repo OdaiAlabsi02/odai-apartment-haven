@@ -12,12 +12,12 @@ export async function uploadImageToStorage(
   try {
     // Generate a unique filename
     const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
-    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
 
-    // Upload the file to Supabase Storage
+    // Upload the file to Supabase Storage using apartment-images bucket
     const { data, error } = await supabase.storage
-      .from('images')
+      .from('apartment-images')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
@@ -29,7 +29,7 @@ export async function uploadImageToStorage(
 
     // Get the public URL
     const { data: urlData } = supabase.storage
-      .from('images')
+      .from('apartment-images')
       .getPublicUrl(filePath);
 
     return {
@@ -53,7 +53,7 @@ export async function uploadMultipleImages(
 export async function deleteImageFromStorage(path: string): Promise<void> {
   try {
     const { error } = await supabase.storage
-      .from('images')
+      .from('apartment-images')
       .remove([path]);
 
     if (error) {
@@ -63,4 +63,4 @@ export async function deleteImageFromStorage(path: string): Promise<void> {
     console.error('Error deleting image:', error);
     throw new Error('Failed to delete image');
   }
-} 
+}

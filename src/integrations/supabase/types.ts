@@ -21,6 +21,8 @@ export type Database = {
           amenities: Json | null
           amenity_details: Json | null
           apartment_number: string | null
+          available_from: string | null
+          available_until: string | null
           balcony: boolean | null
           bathrooms: number | null
           bbq: boolean | null
@@ -57,6 +59,7 @@ export type Database = {
           image_urls: string[] | null
           images: string[] | null
           iron: boolean | null
+          is_active: boolean | null
           is_draft: boolean | null
           kitchen: boolean | null
           latitude: number | null
@@ -95,6 +98,8 @@ export type Database = {
           amenities?: Json | null
           amenity_details?: Json | null
           apartment_number?: string | null
+          available_from?: string | null
+          available_until?: string | null
           balcony?: boolean | null
           bathrooms?: number | null
           bbq?: boolean | null
@@ -131,6 +136,7 @@ export type Database = {
           image_urls?: string[] | null
           images?: string[] | null
           iron?: boolean | null
+          is_active?: boolean | null
           is_draft?: boolean | null
           kitchen?: boolean | null
           latitude?: number | null
@@ -169,6 +175,8 @@ export type Database = {
           amenities?: Json | null
           amenity_details?: Json | null
           apartment_number?: string | null
+          available_from?: string | null
+          available_until?: string | null
           balcony?: boolean | null
           bathrooms?: number | null
           bbq?: boolean | null
@@ -205,6 +213,7 @@ export type Database = {
           image_urls?: string[] | null
           images?: string[] | null
           iron?: boolean | null
+          is_active?: boolean | null
           is_draft?: boolean | null
           kitchen?: boolean | null
           latitude?: number | null
@@ -249,6 +258,7 @@ export type Database = {
       }
       bookings: {
         Row: {
+          admin_notes: string | null
           apartment_id: string | null
           check_in: string
           check_out: string
@@ -258,11 +268,15 @@ export type Database = {
           guest_phone: string | null
           guests: number
           id: string
+          notes: string | null
           payment_method: string | null
+          payment_status: string | null
           status: string | null
+          total_amount: number | null
           user_id: string | null
         }
         Insert: {
+          admin_notes?: string | null
           apartment_id?: string | null
           check_in: string
           check_out: string
@@ -272,11 +286,15 @@ export type Database = {
           guest_phone?: string | null
           guests: number
           id?: string
+          notes?: string | null
           payment_method?: string | null
+          payment_status?: string | null
           status?: string | null
+          total_amount?: number | null
           user_id?: string | null
         }
         Update: {
+          admin_notes?: string | null
           apartment_id?: string | null
           check_in?: string
           check_out?: string
@@ -286,8 +304,11 @@ export type Database = {
           guest_phone?: string | null
           guests?: number
           id?: string
+          notes?: string | null
           payment_method?: string | null
+          payment_status?: string | null
           status?: string | null
+          total_amount?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -296,13 +317,6 @@ export type Database = {
             columns: ["apartment_id"]
             isOneToOne: false
             referencedRelation: "apartments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_apartment_id_fkey"
-            columns: ["apartment_id"]
-            isOneToOne: false
-            referencedRelation: "apartments_with_details"
             referencedColumns: ["id"]
           },
         ]
@@ -339,269 +353,7 @@ export type Database = {
       }
     }
     Views: {
-      apartments_with_details: {
-        Row: {
-          additional_details: string | null
-          air_conditioning: boolean | null
-          amenities: Json | null
-          amenity_ac: string | null
-          amenity_details: Json | null
-          amenity_heating: string | null
-          amenity_kitchen: string | null
-          amenity_parking: string | null
-          amenity_wifi: string | null
-          apartment_number: string | null
-          balcony: boolean | null
-          bathrooms: number | null
-          bbq: boolean | null
-          bed_details_text: string | null
-          bed_linen: boolean | null
-          bedroom_1_bed_types: string[] | null
-          bedroom_1_beds: number | null
-          bedroom_2_bed_types: string[] | null
-          bedroom_2_beds: number | null
-          bedroom_3_bed_types: string[] | null
-          bedroom_3_beds: number | null
-          bedroom_4_bed_types: string[] | null
-          bedroom_4_beds: number | null
-          bedroom_5_bed_types: string[] | null
-          bedroom_5_beds: number | null
-          bedrooms: number | null
-          building_number: string | null
-          calculated_total_beds: number | null
-          coffee_maker: boolean | null
-          created_at: string | null
-          description: string | null
-          dishwasher: boolean | null
-          dryer: boolean | null
-          elevator: boolean | null
-          featured: boolean | null
-          fire_extinguisher: boolean | null
-          first_aid: boolean | null
-          full_address: string | null
-          garden: boolean | null
-          google_location: string | null
-          gym: boolean | null
-          hair_dryer: boolean | null
-          heating: boolean | null
-          id: string | null
-          image_count: number | null
-          image_details: Json | null
-          image_urls: string[] | null
-          images: string[] | null
-          iron: boolean | null
-          is_draft: boolean | null
-          kitchen: boolean | null
-          latitude: number | null
-          location: string | null
-          location_details: Json | null
-          longitude: number | null
-          max_guests: number | null
-          microwave: boolean | null
-          name: string | null
-          netflix: boolean | null
-          oven: boolean | null
-          owner_id: string | null
-          parking: boolean | null
-          pool: boolean | null
-          price_per_night: number | null
-          primary_image: string | null
-          refrigerator: boolean | null
-          security: boolean | null
-          shampoo: boolean | null
-          smoke_detector: boolean | null
-          soap: boolean | null
-          stove: boolean | null
-          street_name: string | null
-          terrace: boolean | null
-          total_bathrooms: number | null
-          total_bedrooms: number | null
-          total_beds: number | null
-          towels: boolean | null
-          tv: boolean | null
-          updated_at: string | null
-          washer: boolean | null
-          wifi: boolean | null
-          workspace: boolean | null
-        }
-        Insert: {
-          additional_details?: string | null
-          air_conditioning?: boolean | null
-          amenities?: Json | null
-          amenity_ac?: never
-          amenity_details?: Json | null
-          amenity_heating?: never
-          amenity_kitchen?: never
-          amenity_parking?: never
-          amenity_wifi?: never
-          apartment_number?: string | null
-          balcony?: boolean | null
-          bathrooms?: number | null
-          bbq?: boolean | null
-          bed_details_text?: never
-          bed_linen?: boolean | null
-          bedroom_1_bed_types?: string[] | null
-          bedroom_1_beds?: number | null
-          bedroom_2_bed_types?: string[] | null
-          bedroom_2_beds?: number | null
-          bedroom_3_bed_types?: string[] | null
-          bedroom_3_beds?: number | null
-          bedroom_4_bed_types?: string[] | null
-          bedroom_4_beds?: number | null
-          bedroom_5_bed_types?: string[] | null
-          bedroom_5_beds?: number | null
-          bedrooms?: number | null
-          building_number?: string | null
-          calculated_total_beds?: never
-          coffee_maker?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          dishwasher?: boolean | null
-          dryer?: boolean | null
-          elevator?: boolean | null
-          featured?: boolean | null
-          fire_extinguisher?: boolean | null
-          first_aid?: boolean | null
-          full_address?: never
-          garden?: boolean | null
-          google_location?: string | null
-          gym?: boolean | null
-          hair_dryer?: boolean | null
-          heating?: boolean | null
-          id?: string | null
-          image_count?: number | null
-          image_details?: Json | null
-          image_urls?: string[] | null
-          images?: string[] | null
-          iron?: boolean | null
-          is_draft?: boolean | null
-          kitchen?: boolean | null
-          latitude?: number | null
-          location?: string | null
-          location_details?: Json | null
-          longitude?: number | null
-          max_guests?: number | null
-          microwave?: boolean | null
-          name?: string | null
-          netflix?: boolean | null
-          oven?: boolean | null
-          owner_id?: string | null
-          parking?: boolean | null
-          pool?: boolean | null
-          price_per_night?: number | null
-          primary_image?: string | null
-          refrigerator?: boolean | null
-          security?: boolean | null
-          shampoo?: boolean | null
-          smoke_detector?: boolean | null
-          soap?: boolean | null
-          stove?: boolean | null
-          street_name?: string | null
-          terrace?: boolean | null
-          total_bathrooms?: never
-          total_bedrooms?: never
-          total_beds?: number | null
-          towels?: boolean | null
-          tv?: boolean | null
-          updated_at?: string | null
-          washer?: boolean | null
-          wifi?: boolean | null
-          workspace?: boolean | null
-        }
-        Update: {
-          additional_details?: string | null
-          air_conditioning?: boolean | null
-          amenities?: Json | null
-          amenity_ac?: never
-          amenity_details?: Json | null
-          amenity_heating?: never
-          amenity_kitchen?: never
-          amenity_parking?: never
-          amenity_wifi?: never
-          apartment_number?: string | null
-          balcony?: boolean | null
-          bathrooms?: number | null
-          bbq?: boolean | null
-          bed_details_text?: never
-          bed_linen?: boolean | null
-          bedroom_1_bed_types?: string[] | null
-          bedroom_1_beds?: number | null
-          bedroom_2_bed_types?: string[] | null
-          bedroom_2_beds?: number | null
-          bedroom_3_bed_types?: string[] | null
-          bedroom_3_beds?: number | null
-          bedroom_4_bed_types?: string[] | null
-          bedroom_4_beds?: number | null
-          bedroom_5_bed_types?: string[] | null
-          bedroom_5_beds?: number | null
-          bedrooms?: number | null
-          building_number?: string | null
-          calculated_total_beds?: never
-          coffee_maker?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          dishwasher?: boolean | null
-          dryer?: boolean | null
-          elevator?: boolean | null
-          featured?: boolean | null
-          fire_extinguisher?: boolean | null
-          first_aid?: boolean | null
-          full_address?: never
-          garden?: boolean | null
-          google_location?: string | null
-          gym?: boolean | null
-          hair_dryer?: boolean | null
-          heating?: boolean | null
-          id?: string | null
-          image_count?: number | null
-          image_details?: Json | null
-          image_urls?: string[] | null
-          images?: string[] | null
-          iron?: boolean | null
-          is_draft?: boolean | null
-          kitchen?: boolean | null
-          latitude?: number | null
-          location?: string | null
-          location_details?: Json | null
-          longitude?: number | null
-          max_guests?: number | null
-          microwave?: boolean | null
-          name?: string | null
-          netflix?: boolean | null
-          oven?: boolean | null
-          owner_id?: string | null
-          parking?: boolean | null
-          pool?: boolean | null
-          price_per_night?: number | null
-          primary_image?: string | null
-          refrigerator?: boolean | null
-          security?: boolean | null
-          shampoo?: boolean | null
-          smoke_detector?: boolean | null
-          soap?: boolean | null
-          stove?: boolean | null
-          street_name?: string | null
-          terrace?: boolean | null
-          total_bathrooms?: never
-          total_bedrooms?: never
-          total_beds?: number | null
-          towels?: boolean | null
-          tv?: boolean | null
-          updated_at?: string | null
-          washer?: boolean | null
-          wifi?: boolean | null
-          workspace?: boolean | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "apartments_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       get_bed_details_text_from_columns: {

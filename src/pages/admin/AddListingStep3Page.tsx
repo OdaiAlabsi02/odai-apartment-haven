@@ -4,10 +4,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ArrowRight, ArrowLeft } from "lucide-react";
+import { UploadedImage } from "@/lib/imageUpload";
 
 export default function AddListingStep3Page() {
   const navigate = useNavigate();
   const [images, setImages] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [step1Data, setStep1Data] = useState<any>(null);
   const [step2Data, setStep2Data] = useState<any>(null);
 
@@ -25,8 +27,10 @@ export default function AddListingStep3Page() {
     }
     if (step3DataStr) {
       const step3Data = JSON.parse(step3DataStr);
-      // Note: File objects can't be serialized, so we'll start fresh
-      // The images will be handled by the ImageUpload component
+      // Restore uploaded images URLs
+      if (step3Data.uploadedImages) {
+        setUploadedImages(step3Data.uploadedImages);
+      }
     }
     
     if (!step1DataStr || !step2DataStr) {
@@ -37,9 +41,11 @@ export default function AddListingStep3Page() {
 
   // Auto-save functionality
   const saveDraft = () => {
-    // Note: File objects can't be serialized to JSON
-    // The images will be handled by the ImageUpload component
-    sessionStorage.setItem("listingStep3", JSON.stringify({ images: [] }));
+    // Save uploaded images URLs (File objects can't be serialized)
+    sessionStorage.setItem("listingStep3", JSON.stringify({ 
+      uploadedImages: uploadedImages,
+      imageCount: uploadedImages.length
+    }));
   };
 
   // Auto-save on images changes
@@ -49,7 +55,7 @@ export default function AddListingStep3Page() {
     }, 1000); // Save after 1 second of inactivity
 
     return () => clearTimeout(timeoutId);
-  }, [images]);
+  }, [uploadedImages]);
 
   // Save draft when user leaves the page
   useEffect(() => {
@@ -59,7 +65,7 @@ export default function AddListingStep3Page() {
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [images]);
+  }, [uploadedImages]);
 
   const handleBack = () => {
     // Save current step data
@@ -68,6 +74,10 @@ export default function AddListingStep3Page() {
   };
 
   const handleNext = () => {
+    if (uploadedImages.length === 0) {
+      alert("Please upload at least one image before proceeding.");
+      return;
+    }
     // Store form data in sessionStorage for multi-step flow
     saveDraft();
     navigate("/admin/add-listing/step4");
@@ -136,7 +146,10 @@ export default function AddListingStep3Page() {
           <ImageUpload
             images={images}
             onImagesChange={setImages}
+            uploadedImages={uploadedImages}
+            onUploadedImagesChange={setUploadedImages}
             maxImages={10}
+            autoUpload={true}
           />
         </CardContent>
       </Card>
@@ -146,7 +159,11 @@ export default function AddListingStep3Page() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Step 2
         </Button>
-        <Button type="button" onClick={handleNext}>
+        <Button 
+          type="button" 
+          onClick={handleNext}
+          disabled={uploadedImages.length === 0}
+        >
           Next Step
           <ArrowRight className="h-4 w-4 ml-2" />
         </Button>

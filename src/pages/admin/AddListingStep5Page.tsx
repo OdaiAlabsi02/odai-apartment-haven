@@ -128,21 +128,14 @@ export default function AddListingStep5Page() {
     setIsSubmitting(true);
 
     try {
-      // Upload images to Supabase Storage first
+      // Use already uploaded images from step 3
       let uploadedImages: { url: string; path: string }[] = [];
-      if (step3Data.images && Array.isArray(step3Data.images) && step3Data.images.length > 0) {
-        // Filter out any non-File objects
-        const validFiles = step3Data.images.filter(img => img instanceof File);
-        if (validFiles.length > 0) {
-          try {
-            uploadedImages = await uploadMultipleImages(validFiles);
-            console.log('Images uploaded successfully:', uploadedImages);
-          } catch (uploadError) {
-            console.error('Error uploading images:', uploadError);
-            alert('Failed to upload images. Please try again.');
-            return;
-          }
-        }
+      if (step3Data.uploadedImages && Array.isArray(step3Data.uploadedImages) && step3Data.uploadedImages.length > 0) {
+        uploadedImages = step3Data.uploadedImages;
+        console.log('Using already uploaded images:', uploadedImages);
+      } else {
+        alert('No images found. Please go back to step 3 and upload images.');
+        return;
       }
 
       // Process all form data using helper function
@@ -287,21 +280,11 @@ export default function AddListingStep5Page() {
     setIsSubmitting(true);
 
     try {
-      // Upload images to Supabase Storage first
+      // Use already uploaded images from step 3
       let uploadedImages: { url: string; path: string }[] = [];
-      if (step3Data.images && Array.isArray(step3Data.images) && step3Data.images.length > 0) {
-        // Filter out any non-File objects
-        const validFiles = step3Data.images.filter(img => img instanceof File);
-        if (validFiles.length > 0) {
-          try {
-            uploadedImages = await uploadMultipleImages(validFiles);
-            console.log('Images uploaded successfully for draft:', uploadedImages);
-          } catch (uploadError) {
-            console.error('Error uploading images for draft:', uploadError);
-            alert('Failed to upload images. Please try again.');
-            return;
-          }
-        }
+      if (step3Data.uploadedImages && Array.isArray(step3Data.uploadedImages) && step3Data.uploadedImages.length > 0) {
+        uploadedImages = step3Data.uploadedImages;
+        console.log('Using already uploaded images for draft:', uploadedImages);
       }
 
       // Process all form data using helper function
@@ -596,12 +579,30 @@ export default function AddListingStep5Page() {
                   Images
                 </h3>
                 <div className="text-sm">
-                  {step3Data.images && step3Data.images.length > 0 ? (
-                    <span className="text-green-600 font-medium">
-                      {step3Data.images.length} image{step3Data.images.length !== 1 ? 's' : ''} uploaded
-                    </span>
+                  {step3Data.uploadedImages && step3Data.uploadedImages.length > 0 ? (
+                    <div className="space-y-2">
+                      <span className="text-green-600 font-medium">
+                        {step3Data.uploadedImages.length} image{step3Data.uploadedImages.length !== 1 ? 's' : ''} uploaded
+                      </span>
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        {step3Data.uploadedImages.slice(0, 6).map((image: any, index: number) => (
+                          <div key={index} className="aspect-square relative overflow-hidden rounded-lg border">
+                            <img
+                              src={image.url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                        {step3Data.uploadedImages.length > 6 && (
+                          <div className="aspect-square flex items-center justify-center bg-muted rounded-lg border text-muted-foreground text-xs">
+                            +{step3Data.uploadedImages.length - 6} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   ) : (
-                    <span className="text-muted-foreground">No images uploaded</span>
+                    <span className="text-destructive">No images uploaded - Please go back to step 3</span>
                   )}
                 </div>
               </div>
