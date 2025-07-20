@@ -62,11 +62,16 @@ export const ImageUpload = ({
     });
 
     if (newImages.length > 0) {
+      console.log('New images selected:', newImages.length);
       onImagesChange([...images, ...newImages]);
       
       // Auto-upload if enabled
       if (autoUpload && onUploadedImagesChange) {
+        console.log('Auto-upload enabled, starting upload...');
         await uploadImages(newImages);
+      } else {
+        console.log('Auto-upload disabled or no onUploadedImagesChange callback');
+        console.log('autoUpload:', autoUpload, 'onUploadedImagesChange:', !!onUploadedImagesChange);
       }
     }
   };
