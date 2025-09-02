@@ -29,7 +29,7 @@ export function useApartments() {
     try {
       setLoading(true);
       
-      console.log('Connecting to local API with real data...');
+      console.log('Connecting to Supabase...');
       
       // Add timeout to prevent infinite loading
       const timeoutPromise = new Promise((_, reject) => 
