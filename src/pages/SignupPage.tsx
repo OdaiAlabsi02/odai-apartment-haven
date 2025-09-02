@@ -42,17 +42,39 @@ export function SignupPage() {
       return;
     }
     
-    const { error } = await signUp(email, password);
-    
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-    } else {
-      toast({
-        title: "Account created successfully!",
-        description: "Please check your email to verify your account."
-      });
-      navigate('/');
+    try {
+      console.log('Starting signup process for:', email);
+      const { error } = await signUp(email, password);
+      
+      if (error) {
+        console.error('Signup error details:', {
+          message: error.message,
+          code: error.code,
+          status: error.status,
+          name: error.name,
+          stack: error.stack
+        });
+        
+        if (error.message) {
+          setError(error.message);
+        } else if (error.code) {
+          setError(`Signup failed: ${error.code}`);
+        } else {
+          setError('Database error saving new user');
+        }
+      } else {
+        console.log('Signup successful, redirecting...');
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email to verify your account."
+        });
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Unexpected signup error:', error);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

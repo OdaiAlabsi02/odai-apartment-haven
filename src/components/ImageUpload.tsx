@@ -19,7 +19,7 @@ export const ImageUpload = ({
   onImagesChange, 
   uploadedImages = [], 
   onUploadedImagesChange,
-  maxImages = 10,
+  maxImages = 30,
   autoUpload = false 
 }: ImageUploadProps) => {
   const [dragActive, setDragActive] = useState(false);

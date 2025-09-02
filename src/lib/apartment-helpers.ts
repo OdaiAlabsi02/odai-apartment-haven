@@ -28,89 +28,61 @@ export interface ApartmentFormData {
 }
 
 export interface ProcessedApartmentData {
-  // Main apartment data
-  name: string;
-  location: string;
-  price_per_night: number;
-  max_guests: number;
-  bathrooms: number;
+  // Main property data - matches properties table
+  title: string;
   description: string;
-  featured: boolean;
+  property_type: string;
+  room_type: string;
+  max_guests: number;
+  bedrooms: number;
+  bathrooms: number;
+  beds: number;
+  base_price: number;
+  currency: string;
   
-  // Location details (individual fields)
-  street_name?: string;
-  building_number?: string;
-  apartment_number?: string;
-  additional_details?: string;
-  google_location?: string;
+  // Property type details
+  property_subtype: string;
+  listing_type: string;
+  building_floors: number;
+  listing_floor: number;
+  building_age: string;
+  unit_size: string;
+  unit_size_unit: string;
+  
+  // Location details
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string;
   latitude?: number;
   longitude?: number;
   
-  // Images (individual fields)
-  primary_image?: string;
-  image_urls?: string[];
-  image_count?: number;
+  // Additional details
+  square_feet?: number;
+  minimum_stay: number;
+  maximum_stay: number;
+  check_in_time: string;
+  check_out_time: string;
+  is_instant_book: boolean;
+  is_active: boolean;
   
-  // Bedroom details (individual fields)
-  bedrooms: number;
-  total_beds: number;
-  bedroom_1_beds?: number;
-  bedroom_1_bed_types?: string[];
-  bedroom_2_beds?: number;
-  bedroom_2_bed_types?: string[];
-  bedroom_3_beds?: number;
-  bedroom_3_bed_types?: string[];
-  bedroom_4_beds?: number;
-  bedroom_4_bed_types?: string[];
-  bedroom_5_beds?: number;
-  bedroom_5_bed_types?: string[];
+  // Host ID (will be set from current user)
+  host_id?: string;
   
-  // Amenities (individual boolean fields)
-  wifi?: boolean;
-  air_conditioning?: boolean;
-  heating?: boolean;
-  kitchen?: boolean;
-  washer?: boolean;
-  dryer?: boolean;
-  parking?: boolean;
-  elevator?: boolean;
-  gym?: boolean;
-  pool?: boolean;
-  balcony?: boolean;
-  terrace?: boolean;
-  tv?: boolean;
-  netflix?: boolean;
-  workspace?: boolean;
-  iron?: boolean;
-  hair_dryer?: boolean;
-  shampoo?: boolean;
-  soap?: boolean;
-  towels?: boolean;
-  bed_linen?: boolean;
-  coffee_maker?: boolean;
-  microwave?: boolean;
-  dishwasher?: boolean;
-  refrigerator?: boolean;
-  oven?: boolean;
-  stove?: boolean;
-  bbq?: boolean;
-  garden?: boolean;
-  security?: boolean;
-  smoke_detector?: boolean;
-  first_aid?: boolean;
-  fire_extinguisher?: boolean;
-  
-  // Draft status
-  is_draft?: boolean;
+  // Amenities will be handled separately in property_amenities table
+  selectedAmenities?: string[];
 }
 
 export function processApartmentFormData(
   step1Data: any,
   step2Data: any,
   step3Data: any,
-  step4Data: any
+  step4Data: any,
+  step5Data?: any
 ): ProcessedApartmentData {
-  // Calculate total bedrooms and beds
+  
   const totalBedrooms = step1Data.bedrooms?.length || 0;
   let totalBeds = 0;
   
@@ -123,82 +95,58 @@ export function processApartmentFormData(
     });
   }
   
-  // Build location string
-  const locationParts = [
+  // Build address line 1 from location parts
+  const addressParts = [
     step2Data.street_name,
     step2Data.building_number,
     step2Data.apartment_number ? `Apt ${step2Data.apartment_number}` : null
   ].filter(Boolean);
   
-  const location = locationParts.join(', ');
-  
-  // Process bedroom details for individual columns
-  const bedroomDetails = step1Data.bedrooms || [];
-  const bedroomFields: any = {};
-  
-  // Process up to 5 bedrooms
-  for (let i = 0; i < 5; i++) {
-    const bedroom = bedroomDetails[i];
-    if (bedroom) {
-      const bedTypes = bedroom.beds?.map((bed: any) => bed.size) || [];
-      bedroomFields[`bedroom_${i + 1}_beds`] = bedroom.beds?.length || 0;
-      bedroomFields[`bedroom_${i + 1}_bed_types`] = bedTypes;
-    } else {
-      bedroomFields[`bedroom_${i + 1}_beds`] = 0;
-      bedroomFields[`bedroom_${i + 1}_bed_types`] = [];
-    }
-  }
-  
-  // Process amenities for individual boolean fields
-  const selectedAmenities = step4Data.selectedAmenities || [];
-  const amenityFields: any = {};
-  
-  const allAmenities = [
-    'wifi', 'air_conditioning', 'heating', 'kitchen', 'washer', 'dryer', 'parking',
-    'elevator', 'gym', 'pool', 'balcony', 'terrace', 'tv', 'netflix', 'workspace',
-    'iron', 'hair_dryer', 'shampoo', 'soap', 'towels', 'bed_linen', 'coffee_maker',
-    'microwave', 'dishwasher', 'refrigerator', 'oven', 'stove', 'bbq', 'garden',
-    'security', 'smoke_detector', 'first_aid', 'fire_extinguisher'
-  ];
-  
-  allAmenities.forEach(amenity => {
-    amenityFields[amenity] = selectedAmenities.includes(amenity);
-  });
+  const addressLine1 = addressParts.join(', ');
   
   return {
-    // Main apartment data
-    name: step1Data.name,
-    location: location || 'Location not specified',
-    price_per_night: parseInt(step1Data.price_per_night),
-    max_guests: parseInt(step1Data.max_guests),
-    bathrooms: parseInt(step1Data.bathrooms),
+    // Main property data
+    title: step1Data.name,
     description: step1Data.description || "",
-    featured: false,
+    property_type: step5Data?.property_type || "apartment", // Use step 5 data or default
+    room_type: "entire_place", // Default to entire place
+    max_guests: parseInt(step1Data.max_guests),
+    bedrooms: totalBedrooms,
+    bathrooms: parseInt(step1Data.bathrooms),
+    beds: totalBeds,
+    base_price: parseInt(step1Data.price_per_night),
+    currency: "USD", // Default to USD
+    
+    // Property type details
+    property_subtype: step5Data?.property_subtype || "apartment", // Use step 5 data or default
+    listing_type: step5Data?.listing_type || "entire_place", // Use step 5 data or default
+    building_floors: step5Data?.building_floors || 1, // Use step 5 data or default
+    listing_floor: step5Data?.listing_floor || 1, // Use step 5 data or default
+    building_age: step5Data?.building_age || "New", // Use step 5 data or default
+    unit_size: step5Data?.unit_size || "0", // Use step 5 data or default
+    unit_size_unit: step5Data?.unit_size_unit || "sq_meters", // Use step 5 data or default
     
     // Location details
-    street_name: step2Data.street_name,
-    building_number: step2Data.building_number,
-    apartment_number: step2Data.apartment_number,
-    additional_details: step2Data.additional_details,
-    google_location: step2Data.google_location,
+    address_line1: addressLine1 || 'Address not specified',
+    address_line2: step2Data.additional_details,
+    city: step2Data.city || 'City not specified',
+    state: step2Data.state || 'State not specified',
+    country: step2Data.country || 'Country not specified',
+    postal_code: step2Data.postal_code || 'Postal code not specified',
     latitude: step2Data.selectedLocation?.lat,
     longitude: step2Data.selectedLocation?.lng,
     
-    // Image details - will be processed during upload
-    primary_image: null, // Will be set after upload
-    image_urls: [], // Will be set after upload
-    image_count: step3Data.images?.length || 0,
+    // Additional details
+    square_feet: undefined, // Will be set if available
+    minimum_stay: 1, // Default to 1 night
+    maximum_stay: 365, // Default to 365 nights
+    check_in_time: "15:00:00", // Default to 3 PM
+    check_out_time: "11:00:00", // Default to 11 AM
+    is_instant_book: false, // Default to false
+    is_active: true, // Default to active
     
-    // Bedroom details
-    bedrooms: totalBedrooms,
-    total_beds: totalBeds,
-    ...bedroomFields,
-    
-    // Amenity details
-    ...amenityFields,
-    
-    // Draft status
-    is_draft: false
+    // Amenities for later processing
+    selectedAmenities: step4Data.selectedAmenities || []
   };
 }
 
@@ -206,7 +154,8 @@ export function validateApartmentData(
   step1Data: any,
   step2Data: any,
   step3Data: any,
-  step4Data: any
+  step4Data: any,
+  step5Data?: any
 ): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
   
@@ -220,6 +169,20 @@ export function validateApartmentData(
   // Validate Step 2 data
   if (!step2Data?.street_name) errors.push("Street name is required");
   if (!step2Data?.building_number) errors.push("Building number is required");
+  if (!step2Data?.city) errors.push("City is required");
+  if (!step2Data?.state) errors.push("State is required");
+  if (!step2Data?.country) errors.push("Country is required");
+  
+  // Validate Step 5 data (property type details)
+  if (step5Data) {
+    if (!step5Data.property_type) errors.push("Property type is required");
+    if (!step5Data.property_subtype) errors.push("Property subtype is required");
+    if (!step5Data.listing_type) errors.push("Listing type is required");
+    if (step5Data.building_floors < 1) errors.push("Building floors must be at least 1");
+    if (step5Data.listing_floor < 1 || step5Data.listing_floor > step5Data.building_floors) {
+      errors.push("Listing floor must be between 1 and building floors");
+    }
+  }
   
   // Validate Step 3 data (images are optional)
   // if (!step3Data?.images?.length) errors.push("At least one image is required");
@@ -241,10 +204,10 @@ export function formatAmenitiesForDisplay(amenities: string[]): string[] {
     kitchen: "Kitchen",
     washer: "Washer",
     dryer: "Dryer",
-    parking: "Free Parking",
+    parking: "Parking",
     elevator: "Elevator",
     gym: "Gym",
-    pool: "Swimming Pool",
+    pool: "Pool",
     balcony: "Balcony",
     terrace: "Terrace",
     tv: "TV",
@@ -262,11 +225,11 @@ export function formatAmenitiesForDisplay(amenities: string[]): string[] {
     refrigerator: "Refrigerator",
     oven: "Oven",
     stove: "Stove",
-    bbq: "BBQ Grill",
+    bbq: "BBQ",
     garden: "Garden",
-    security: "Security System",
+    security: "Security",
     smoke_detector: "Smoke Detector",
-    first_aid: "First Aid Kit",
+    first_aid: "First Aid",
     fire_extinguisher: "Fire Extinguisher"
   };
   

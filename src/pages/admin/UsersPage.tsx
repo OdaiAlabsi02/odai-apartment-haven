@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -5,55 +6,47 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Mail, Phone, Calendar, Search, UserCheck, UserX, Shield } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
-const mockUsers = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 234 567 8900",
-    joinDate: "2024-01-15",
-    bookings: 3,
-    status: "active",
-    role: "guest",
-    avatar: ""
-  },
-  {
-    id: "2",
-    name: "Sarah Wilson",
-    email: "sarah@example.com",
-    phone: "+1 234 567 8901",
-    joinDate: "2024-01-10",
-    bookings: 1,
-    status: "active",
-    role: "guest",
-    avatar: ""
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    email: "mike@example.com",
-    phone: "+1 234 567 8902",
-    joinDate: "2023-12-20",
-    bookings: 5,
-    status: "inactive",
-    role: "guest",
-    avatar: ""
-  },
-  {
-    id: "4",
-    name: "Admin User",
-    email: "admin@example.com",
-    phone: "+1 234 567 8999",
-    joinDate: "2023-01-01",
-    bookings: 0,
-    status: "active",
-    role: "admin",
-    avatar: ""
-  }
-];
+// New type matching the new schema
+type UserProfile = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  created_at: string;
+  is_verified?: boolean;
+  is_host?: boolean;
+  role?: string;
+  profile_picture_url?: string;
+  status?: string;
+};
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+      setUsers(data || []);
+      setLoading(false);
+    };
+    fetchUsers();
+  }, []);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -78,9 +71,37 @@ export default function UsersPage() {
     }
   };
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const getInitials = (first: string, last: string) => {
+    return (first[0] || '') + (last[0] || '');
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <User className="h-6 w-6 animate-spin" />
+          <span>Loading users...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Users Management</h1>
+            <p className="text-muted-foreground">Manage user accounts and permissions</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center min-h-[300px]">
+          <UserX className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-lg text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -90,166 +111,67 @@ export default function UsersPage() {
           <p className="text-muted-foreground">Manage user accounts and permissions</p>
         </div>
       </div>
-
-      {/* Stats Cards */}
+      {/* Stats Cards (optional, can be implemented with real data) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-bold">{mockUsers.length}</p>
+                <p className="text-2xl font-bold">{users.length}</p>
               </div>
-              <User className="h-8 w-8 text-muted-foreground" />
+              <User className="h-6 w-6 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-2xl font-bold text-success">
-                  {mockUsers.filter(u => u.status === 'active').length}
-                </p>
-              </div>
-              <UserCheck className="h-8 w-8 text-success" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Inactive</p>
-                <p className="text-2xl font-bold text-warning">
-                  {mockUsers.filter(u => u.status === 'inactive').length}
-                </p>
-              </div>
-              <UserX className="h-8 w-8 text-warning" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Admins</p>
-                <p className="text-2xl font-bold text-primary">
-                  {mockUsers.filter(u => u.role === 'admin').length}
-                </p>
-              </div>
-              <Shield className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Add more stats as needed */}
       </div>
-
-      {/* Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search users by name, email..."
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Users ({mockUsers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead>Bookings</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={user.avatar} />
-                          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-sm text-muted-foreground">ID: {user.id}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="text-sm flex items-center">
-                          <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
-                          {user.email}
-                        </div>
-                        <div className="text-sm flex items-center text-muted-foreground">
-                          <Phone className="h-3 w-3 mr-1" />
-                          {user.phone}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center text-sm">
-                        <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                        {new Date(user.joinDate).toLocaleDateString()}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-center">
-                        <div className="font-medium">{user.bookings}</div>
-                        <div className="text-xs text-muted-foreground">bookings</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getRoleColor(user.role)}>
-                        {user.role === 'admin' && <Shield className="h-3 w-3 mr-1" />}
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(user.status)}>
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                          View
-                        </Button>
-                        {user.role !== 'admin' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className={user.status === 'active' ? 'text-destructive border-destructive hover:bg-destructive hover:text-white' : 'text-success border-success hover:bg-success hover:text-white'}
-                          >
-                            {user.status === 'active' ? 'Suspend' : 'Activate'}
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="bg-card rounded-lg shadow p-4">
+        <div className="flex items-center mb-4">
+          <Search className="h-5 w-5 text-muted-foreground mr-2" />
+          <Input placeholder="Search users..." className="max-w-xs" />
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Role</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map(user => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Avatar>
+                      {user.profile_picture_url ? (
+                        <AvatarImage src={user.profile_picture_url} alt={user.first_name + ' ' + user.last_name} />
+                      ) : (
+                        <AvatarFallback>{getInitials(user.first_name, user.last_name)}</AvatarFallback>
+                      )}
+                    </Avatar>
+                    <span>{user.first_name} {user.last_name}</span>
+                  </div>
+                </TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phone || '-'}</TableCell>
+                <TableCell>{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(user.status || 'active')}>{user.status || 'active'}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge className={getRoleColor(user.role || 'guest')}>{user.role || 'guest'}</Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

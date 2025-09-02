@@ -190,7 +190,7 @@ export default function AddListingPage() {
             <ImageUpload
               images={images}
               onImagesChange={setImages}
-              maxImages={10}
+              maxImages={30}
             />
             
             <Button type="submit" disabled={loading} className="w-full">

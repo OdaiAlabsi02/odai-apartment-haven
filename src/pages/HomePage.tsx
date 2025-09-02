@@ -1,13 +1,20 @@
 import { Link } from "react-router-dom";
-import { Search, MapPin, Star, Calendar } from "lucide-react";
+import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ApartmentCard } from "@/components/ApartmentCard";
-import { apartments } from "@/data/apartments";
+
 import heroImage from "@/assets/hero-apartment.jpg";
+import { useApartments } from "@/hooks/useApartments";
 
 export const HomePage = () => {
-  const featuredApartments = apartments.filter(apt => apt.featured);
+  const { apartments, loading } = useApartments();
+  
+  // Show featured apartments if they exist, otherwise show first 2 apartments from database
+  const featuredApartments = apartments.length > 0
+    ? (apartments.filter(apt => apt.featured).length > 0 
+        ? apartments.filter(apt => apt.featured)
+        : apartments.slice(0, 2))
+    : [];
 
   return (
     <div className="min-h-screen">
@@ -25,33 +32,9 @@ export const HomePage = () => {
               Home Away From Home
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-8 animate-slide-up">
+          <p className="text-lg md:text-xl text-white/90 animate-slide-up">
             Discover beautiful apartments in prime locations. Skip the fees, book direct with Odai.
           </p>
-          
-          <div className="bg-card/90 backdrop-blur-sm p-6 rounded-2xl shadow-card max-w-2xl mx-auto animate-scale-in">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Where to?"
-                  className="pl-10 border-0 bg-background/50"
-                />
-              </div>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Check-in"
-                  type="date"
-                  className="pl-10 border-0 bg-background/50"
-                />
-              </div>
-              <Button className="bg-button-gradient hover:opacity-90 transition-opacity">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Button>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -76,7 +59,7 @@ export const HomePage = () => {
 
             <div className="text-center group">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                <MapPin className="h-8 w-8 text-primary" />
+                <Star className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Prime Locations</h3>
               <p className="text-muted-foreground">Carefully selected properties in the best neighborhoods.</p>
@@ -84,7 +67,7 @@ export const HomePage = () => {
 
             <div className="text-center group">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                <Calendar className="h-8 w-8 text-primary" />
+                <Star className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Personal Service</h3>
               <p className="text-muted-foreground">Direct communication with Odai for personalized assistance.</p>
@@ -92,6 +75,8 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+
+
 
       {/* Featured Apartments */}
       <section className="py-16 bg-muted/30">
@@ -103,11 +88,22 @@ export const HomePage = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {featuredApartments.map((apartment) => (
-              <ApartmentCard key={apartment.id} apartment={apartment} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <div className="text-muted-foreground">Loading apartments...</div>
+            </div>
+          ) : featuredApartments.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {featuredApartments.map((apartment) => (
+                <ApartmentCard key={apartment.id} apartment={apartment} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No apartments available yet. Add your first apartment from the admin panel!</p>
+            </div>
+          )}
         </div>
       </section>
 

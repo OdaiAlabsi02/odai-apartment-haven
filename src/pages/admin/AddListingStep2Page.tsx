@@ -39,6 +39,10 @@ export default function AddListingStep2Page() {
     building_number: "",
     apartment_number: "",
     additional_details: "",
+    city: "",
+    state: "",
+    country: "",
+    postal_code: "",
   });
   const [step1Data, setStep1Data] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -69,6 +73,10 @@ export default function AddListingStep2Page() {
           building_number: savedData.building_number || "",
           apartment_number: savedData.apartment_number || "",
           additional_details: savedData.additional_details || "",
+          city: savedData.city || "",
+          state: savedData.state || "",
+          country: savedData.country || "",
+          postal_code: savedData.postal_code || "",
         });
         if (savedData.selectedLocation) {
           setSelectedLocation(savedData.selectedLocation);
@@ -235,6 +243,10 @@ export default function AddListingStep2Page() {
         const addressComponents = results[0].address_components;
         let streetName = '';
         let buildingNumber = '';
+        let city = '';
+        let state = '';
+        let country = '';
+        let postalCode = '';
         
         for (const component of addressComponents) {
           if (component.types.includes('route')) {
@@ -243,13 +255,29 @@ export default function AddListingStep2Page() {
           if (component.types.includes('street_number')) {
             buildingNumber = component.long_name;
           }
+          if (component.types.includes('locality')) {
+            city = component.long_name;
+          }
+          if (component.types.includes('administrative_area_level_1')) {
+            state = component.long_name;
+          }
+          if (component.types.includes('country')) {
+            country = component.long_name;
+          }
+          if (component.types.includes('postal_code')) {
+            postalCode = component.long_name;
+          }
         }
         
         setForm(prev => ({
           ...prev,
           google_location: results[0].formatted_address,
           street_name: streetName || prev.street_name,
-          building_number: buildingNumber || prev.building_number
+          building_number: buildingNumber || prev.building_number,
+          city: city || prev.city,
+          state: state || prev.state,
+          country: country || prev.country,
+          postal_code: postalCode || prev.postal_code
         }));
       }
     });
@@ -276,6 +304,10 @@ export default function AddListingStep2Page() {
         const addressComponents = results[0].address_components;
         let streetName = '';
         let buildingNumber = '';
+        let city = '';
+        let state = '';
+        let country = '';
+        let postalCode = '';
         
         for (const component of addressComponents) {
           if (component.types.includes('route')) {
@@ -284,13 +316,29 @@ export default function AddListingStep2Page() {
           if (component.types.includes('street_number')) {
             buildingNumber = component.long_name;
           }
+          if (component.types.includes('locality')) {
+            city = component.long_name;
+          }
+          if (component.types.includes('administrative_area_level_1')) {
+            state = component.long_name;
+          }
+          if (component.types.includes('country')) {
+            country = component.long_name;
+          }
+          if (component.types.includes('postal_code')) {
+            postalCode = component.long_name;
+          }
         }
         
         setForm(prev => ({
           ...prev,
           google_location: results[0].formatted_address,
           street_name: streetName || prev.street_name,
-          building_number: buildingNumber || prev.building_number
+          building_number: buildingNumber || prev.building_number,
+          city: city || prev.city,
+          state: state || prev.state,
+          country: country || prev.country,
+          postal_code: postalCode || prev.postal_code
         }));
       }
     });
@@ -304,8 +352,9 @@ export default function AddListingStep2Page() {
 
   const handleNext = () => {
     // Validate required fields
-    if (!form.google_location || !form.street_name || !form.building_number) {
-      alert("Please fill in the location details");
+    if (!form.google_location || !form.street_name || !form.building_number || 
+        !form.city || !form.state || !form.country || !form.postal_code) {
+      alert("Please fill in all required location details including city, state, country, and postal code");
       return;
     }
 
@@ -498,6 +547,58 @@ export default function AddListingStep2Page() {
                   onChange={handleChange}
                   rows={3}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City *</Label>
+                  <Input
+                    id="city"
+                    name="city"
+                    placeholder="Enter city"
+                    value={form.city}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="state">State/Province *</Label>
+                  <Input
+                    id="state"
+                    name="state"
+                    placeholder="Enter state or province"
+                    value={form.state}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country *</Label>
+                  <Input
+                    id="country"
+                    name="country"
+                    placeholder="Enter country"
+                    value={form.country}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="postal_code">Postal Code *</Label>
+                  <Input
+                    id="postal_code"
+                    name="postal_code"
+                    placeholder="Enter postal code"
+                    value={form.postal_code}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
             </div>
           </CardContent>

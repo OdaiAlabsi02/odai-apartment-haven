@@ -24,12 +24,14 @@ import UsersPage from "./pages/admin/UsersPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import DashboardPage from "./pages/admin/DashboardPage";
 import AmenitiesPage from "./pages/admin/AmenitiesPage";
+import AvailabilityPage from "./pages/admin/AvailabilityPage";
 import AddListingPage from "./pages/admin/AddListingPage";
 import AddListingStep1Page from "./pages/admin/AddListingStep1Page";
 import AddListingStep2Page from "./pages/admin/AddListingStep2Page";
 import AddListingStep3Page from "./pages/admin/AddListingStep3Page";
 import AddListingStep4Page from "./pages/admin/AddListingStep4Page";
 import AddListingStep5Page from "./pages/admin/AddListingStep5Page";
+import ListingEditorPage from "./pages/admin/ListingEditorPage";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -52,6 +54,7 @@ function AppWithRouterLogic() {
             <Route index element={<DashboardPage />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="listings" element={<ListingsPage />} />
+            <Route path="availability" element={<AvailabilityPage />} />
             <Route path="amenities" element={<AmenitiesPage />} />
             <Route path="bookings" element={<BookingsPage />} />
             <Route path="messages" element={<MessagesPage />} />
@@ -63,6 +66,7 @@ function AppWithRouterLogic() {
             <Route path="add-listing/step3" element={<AddListingStep3Page />} />
             <Route path="add-listing/step4" element={<AddListingStep4Page />} />
             <Route path="add-listing/step5" element={<AddListingStep5Page />} />
+            <Route path="listing-editor/:listingId" element={<ListingEditorPage />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

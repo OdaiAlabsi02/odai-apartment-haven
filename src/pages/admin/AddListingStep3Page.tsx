@@ -148,7 +148,7 @@ export default function AddListingStep3Page() {
             onImagesChange={setImages}
             uploadedImages={uploadedImages}
             onUploadedImagesChange={setUploadedImages}
-            maxImages={10}
+            maxImages={30}
             autoUpload={true}
           />
         </CardContent>

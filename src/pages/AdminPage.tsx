@@ -20,6 +20,9 @@ export const AdminPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>(mockBookings);
   const [loading, setLoading] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [adminName, setAdminName] = useState("");
+  const [adminPhone, setAdminPhone] = useState("");
 
   // Check if already authenticated
   useEffect(() => {
@@ -31,19 +34,107 @@ export const AdminPage = () => {
 
   // Handle Google OAuth login
   const handleGoogleLogin = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin + "/admin",
-      },
-    });
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Google Login Failed",
-        description: error.message,
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/admin`
+        }
       });
+
+      if (error) {
+        throw error;
+      }
+
+      // The user will be redirected to Google OAuth
+      // We'll check if they're a new user after they return
+    } catch (error) {
+      console.error('Google OAuth error:', error);
+      toast({
+        title: "Authentication Failed",
+        description: "Failed to sign in with Google. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle admin profile completion
+  const handleCompleteAdminProfile = async () => {
+    if (!adminName.trim() || !adminPhone.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide both name and phone number.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('No active session');
+      }
+
+      // Create admin user profile
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: session.user.id,
+          email: session.user.email,
+          first_name: adminName.split(' ')[0] || adminName,
+          last_name: adminName.split(' ').slice(1).join(' ') || '',
+          phone: adminPhone
+        });
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw new Error('Failed to create admin profile');
+      }
+
+      // Update user to be admin
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          is_admin: true, 
+          role: 'admin'
+        })
+        .eq('id', session.user.id);
+
+      if (updateError) {
+        console.error('Admin update error:', updateError);
+        // Try to continue anyway - the user was created successfully
+        toast({
+          title: "Warning",
+          description: "User created but admin role update failed. Please contact support.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('Admin role updated successfully');
+      }
+
+      // Success - set as authenticated
+      setIsAuthenticated(true);
+      localStorage.setItem("adminAuthenticated", "true");
+      setIsNewUser(false);
+      
+      toast({
+        title: "Admin Profile Created",
+        description: "Welcome to the admin dashboard!",
+      });
+    } catch (error) {
+      console.error('Error creating admin profile:', error);
+      toast({
+        title: "Profile Creation Failed",
+        description: "Failed to create admin profile. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -54,33 +145,42 @@ export const AdminPage = () => {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Fetch profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
+        // Check if user exists in users table
+        const { data: user } = await supabase
+          .from("users")
+          .select("id, email, first_name, last_name, is_admin, role")
           .eq("id", session.user.id)
           .single();
-        if (profile?.role === "admin") {
-          setIsAuthenticated(true);
-          localStorage.setItem("adminAuthenticated", "true");
-          toast({
-            title: "Access Granted",
-            description: "Welcome to the admin dashboard!",
-          });
-        } else if (profile) {
-          toast({
-            variant: "destructive",
-            title: "Access Denied",
-            description: "You are not an admin.",
-          });
-          await supabase.auth.signOut();
+        
+        if (user) {
+          // Existing user - check if admin
+          if (user.is_admin === true || user.role === "admin") {
+            setIsAuthenticated(true);
+            localStorage.setItem("adminAuthenticated", "true");
+            toast({
+              title: "Access Granted",
+              description: "Welcome back to the admin dashboard!",
+            });
+          } else {
+            // User exists but not admin
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin privileges.",
+              variant: "destructive"
+            });
+            await supabase.auth.signOut();
+          }
+        } else {
+          // New user - show signup form
+          setIsNewUser(true);
+          setAdminName(session.user.user_metadata?.full_name || '');
+          setAdminPhone(session.user.user_metadata?.phone_number || '');
         }
       }
       setLoading(false);
     };
+
     checkAdmin();
-    // Only run on mount or after OAuth redirect
-    // eslint-disable-next-line
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -144,6 +244,72 @@ export const AdminPage = () => {
   };
 
   if (!isAuthenticated) {
+    // Show admin signup form for new users
+    if (isNewUser) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle>Complete Admin Profile</CardTitle>
+              <p className="text-muted-foreground">
+                Please provide your information to complete admin setup
+              </p>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={(e) => { e.preventDefault(); handleCompleteAdminProfile(); }} className="space-y-4">
+                <div>
+                  <Label htmlFor="adminName">Full Name *</Label>
+                  <Input
+                    id="adminName"
+                    type="text"
+                    value={adminName}
+                    onChange={(e) => setAdminName(e.target.value)}
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="adminPhone">Phone Number *</Label>
+                  <Input
+                    id="adminPhone"
+                    type="tel"
+                    value={adminPhone}
+                    onChange={(e) => setAdminPhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                    required
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-button-gradient hover:opacity-90 transition-opacity"
+                  disabled={loading}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  {loading ? "Creating Profile..." : "Complete Setup"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setIsNewUser(false);
+                    supabase.auth.signOut();
+                  }}
+                  disabled={loading}
+                >
+                  Cancel & Sign Out
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    // Show regular admin login form
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="w-full max-w-md">

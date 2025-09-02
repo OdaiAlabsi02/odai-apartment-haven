@@ -87,7 +87,7 @@ export const ApartmentDetailsPage = () => {
             <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
               <img
                 src={apartment.primary_image || apartment.image_urls?.[currentImageIndex] || '/placeholder.svg'}
-                alt={apartment.name}
+                alt={apartment.title}
                 className="w-full h-full object-cover"
               />
               
@@ -137,7 +137,7 @@ export const ApartmentDetailsPage = () => {
                 >
                   <img
                     src={image}
-                    alt={`${apartment.name} ${index + 1}`}
+                    alt={`${apartment.title} ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -151,10 +151,10 @@ export const ApartmentDetailsPage = () => {
               {apartment.featured && (
                 <Badge className="mb-2 bg-accent text-accent-foreground">Featured</Badge>
               )}
-              <h1 className="text-3xl font-bold mb-2">{apartment.name}</h1>
+              <h1 className="text-3xl font-bold mb-2">{apartment.title}</h1>
               <div className="flex items-center text-muted-foreground mb-4">
                 <MapPin className="h-4 w-4 mr-1" />
-                {apartment.location}
+                {apartment.city}
               </div>
               
               <div className="flex items-center space-x-6 text-sm">
@@ -175,7 +175,7 @@ export const ApartmentDetailsPage = () => {
 
             <div className="bg-primary/5 rounded-xl p-6">
               <div className="text-2xl font-bold mb-2">
-                ${apartment.price_per_night}
+                <span className="text-3xl font-bold text-primary">${apartment.base_price}</span>
                 <span className="text-base font-normal text-muted-foreground"> / night</span>
               </div>
               <p className="text-muted-foreground mb-4">Plus taxes and fees</p>
@@ -228,7 +228,7 @@ export const ApartmentDetailsPage = () => {
                   <CardContent className="p-4">
                     <h3 className="font-semibold mb-1">{apt.name}</h3>
                     <p className="text-muted-foreground text-sm mb-2">{apt.location}</p>
-                    <p className="font-semibold">${apt.price_per_night}/night</p>
+                    <p className="font-semibold">${apt.base_price}/night</p>
                     <Link to={`/apartment/${apt.id}`} className="block mt-3">
                       <Button variant="outline" size="sm" className="w-full">
                         View Details

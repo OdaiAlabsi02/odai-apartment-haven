@@ -6,245 +6,368 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
-  // Allows to automatically instanciate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
-  }
+export interface Database {
   public: {
     Tables: {
-      apartments: {
+      amenity_categories: {
         Row: {
-          additional_details: string | null
-          air_conditioning: boolean | null
-          amenities: Json | null
-          amenity_details: Json | null
-          apartment_number: string | null
-          available_from: string | null
-          available_until: string | null
-          balcony: boolean | null
-          bathrooms: number | null
-          bbq: boolean | null
-          bed_linen: boolean | null
-          bedroom_1_bed_types: string[] | null
-          bedroom_1_beds: number | null
-          bedroom_2_bed_types: string[] | null
-          bedroom_2_beds: number | null
-          bedroom_3_bed_types: string[] | null
-          bedroom_3_beds: number | null
-          bedroom_4_bed_types: string[] | null
-          bedroom_4_beds: number | null
-          bedroom_5_bed_types: string[] | null
-          bedroom_5_beds: number | null
-          bedrooms: number | null
-          building_number: string | null
-          coffee_maker: boolean | null
-          created_at: string | null
-          description: string | null
-          dishwasher: boolean | null
-          dryer: boolean | null
-          elevator: boolean | null
-          featured: boolean | null
-          fire_extinguisher: boolean | null
-          first_aid: boolean | null
-          garden: boolean | null
-          google_location: string | null
-          gym: boolean | null
-          hair_dryer: boolean | null
-          heating: boolean | null
           id: string
-          image_count: number | null
-          image_details: Json | null
-          image_urls: string[] | null
-          images: string[] | null
-          iron: boolean | null
-          is_active: boolean | null
-          is_draft: boolean | null
-          kitchen: boolean | null
-          latitude: number | null
-          location: string | null
-          location_details: Json | null
-          longitude: number | null
-          max_guests: number
-          microwave: boolean | null
           name: string
-          netflix: boolean | null
-          oven: boolean | null
-          owner_id: string | null
-          parking: boolean | null
-          pool: boolean | null
-          price_per_night: number
-          primary_image: string | null
-          refrigerator: boolean | null
-          security: boolean | null
-          shampoo: boolean | null
-          smoke_detector: boolean | null
-          soap: boolean | null
-          stove: boolean | null
-          street_name: string | null
-          terrace: boolean | null
-          total_beds: number | null
-          towels: boolean | null
-          tv: boolean | null
-          updated_at: string | null
-          washer: boolean | null
-          wifi: boolean | null
-          workspace: boolean | null
+          description: string | null
+          icon: string | null
+          created_at: string
         }
         Insert: {
-          additional_details?: string | null
-          air_conditioning?: boolean | null
-          amenities?: Json | null
-          amenity_details?: Json | null
-          apartment_number?: string | null
-          available_from?: string | null
-          available_until?: string | null
-          balcony?: boolean | null
-          bathrooms?: number | null
-          bbq?: boolean | null
-          bed_linen?: boolean | null
-          bedroom_1_bed_types?: string[] | null
-          bedroom_1_beds?: number | null
-          bedroom_2_bed_types?: string[] | null
-          bedroom_2_beds?: number | null
-          bedroom_3_bed_types?: string[] | null
-          bedroom_3_beds?: number | null
-          bedroom_4_bed_types?: string[] | null
-          bedroom_4_beds?: number | null
-          bedroom_5_bed_types?: string[] | null
-          bedroom_5_beds?: number | null
-          bedrooms?: number | null
-          building_number?: string | null
-          coffee_maker?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          dishwasher?: boolean | null
-          dryer?: boolean | null
-          elevator?: boolean | null
-          featured?: boolean | null
-          fire_extinguisher?: boolean | null
-          first_aid?: boolean | null
-          garden?: boolean | null
-          google_location?: string | null
-          gym?: boolean | null
-          hair_dryer?: boolean | null
-          heating?: boolean | null
           id?: string
-          image_count?: number | null
-          image_details?: Json | null
-          image_urls?: string[] | null
-          images?: string[] | null
-          iron?: boolean | null
-          is_active?: boolean | null
-          is_draft?: boolean | null
-          kitchen?: boolean | null
-          latitude?: number | null
-          location?: string | null
-          location_details?: Json | null
-          longitude?: number | null
-          max_guests: number
-          microwave?: boolean | null
           name: string
-          netflix?: boolean | null
-          oven?: boolean | null
-          owner_id?: string | null
-          parking?: boolean | null
-          pool?: boolean | null
-          price_per_night: number
-          primary_image?: string | null
-          refrigerator?: boolean | null
-          security?: boolean | null
-          shampoo?: boolean | null
-          smoke_detector?: boolean | null
-          soap?: boolean | null
-          stove?: boolean | null
-          street_name?: string | null
-          terrace?: boolean | null
-          total_beds?: number | null
-          towels?: boolean | null
-          tv?: boolean | null
-          updated_at?: string | null
-          washer?: boolean | null
-          wifi?: boolean | null
-          workspace?: boolean | null
+          description?: string | null
+          icon?: string | null
+          created_at?: string
         }
         Update: {
-          additional_details?: string | null
-          air_conditioning?: boolean | null
-          amenities?: Json | null
-          amenity_details?: Json | null
+          id?: string
+          name?: string
+          description?: string | null
+          icon?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      amenities: {
+        Row: {
+          id: string
+          name: string
+          category_id: string | null
+          icon: string | null
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          category_id?: string | null
+          icon?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          category_id?: string | null
+          icon?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amenities_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "amenity_categories"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      apartment_amenities: {
+        Row: {
+          id: string
+          apartment_id: string
+          amenity_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          apartment_id: string
+          amenity_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          apartment_id?: string
+          amenity_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartment_amenities_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apartment_amenities_amenity_id_fkey"
+            columns: ["amenity_id"]
+            isOneToOne: false
+            referencedRelation: "amenities"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      apartment_availability: {
+        Row: {
+          id: string
+          apartment_id: string
+          date: string
+          is_available: boolean
+          price_override: number | null
+          minimum_stay: number
+          maximum_stay: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          apartment_id: string
+          date: string
+          is_available?: boolean
+          price_override?: number | null
+          minimum_stay?: number
+          maximum_stay?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          apartment_id?: string
+          date?: string
+          is_available?: boolean
+          price_override?: number | null
+          minimum_stay?: number
+          maximum_stay?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartment_availability_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      apartment_images: {
+        Row: {
+          id: string
+          apartment_id: string
+          image_url: string
+          image_order: number
+          category: string | null
+          is_primary: boolean
+          alt_text: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          apartment_id: string
+          image_url: string
+          image_order?: number
+          category?: string | null
+          is_primary?: boolean
+          alt_text?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          apartment_id?: string
+          image_url?: string
+          image_order?: number
+          category?: string | null
+          is_primary?: boolean
+          alt_text?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartment_images_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      apartment_pricing: {
+        Row: {
+          id: string
+          apartment_id: string
+          base_price: number
+          weekend_price: number | null
+          holiday_price: number | null
+          weekly_discount: number
+          monthly_discount: number
+          cleaning_fee: number
+          service_fee: number
+          security_deposit: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          apartment_id: string
+          base_price: number
+          weekend_price?: number | null
+          holiday_price?: number | null
+          weekly_discount?: number
+          monthly_discount?: number
+          cleaning_fee?: number
+          service_fee?: number
+          security_deposit?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          apartment_id?: string
+          base_price?: number
+          weekend_price?: number | null
+          holiday_price?: number | null
+          weekly_discount?: number
+          monthly_discount?: number
+          cleaning_fee?: number
+          service_fee?: number
+          security_deposit?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apartment_pricing_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      apartments: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          location: string | null
+          price_per_night: number
+          max_guests: number
+          images: string[] | null
+          created_at: string
+          owner_id: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          featured: boolean
+          updated_at: string
+          street_name: string | null
+          building_number: string | null
+          apartment_number: string | null
+          additional_details: string | null
+          google_location: string | null
+          latitude: number | null
+          longitude: number | null
+          is_draft: boolean
+          total_beds: number | null
+          location_details: Json | null
+          image_details: Json | null
+          primary_image: string | null
+          image_count: number
+          image_urls: string[] | null
+          bedroom_1_beds: number
+          bedroom_1_bed_types: string[] | null
+          bedroom_2_beds: number
+          bedroom_2_bed_types: string[] | null
+          bedroom_3_beds: number
+          bedroom_3_bed_types: string[] | null
+          bedroom_4_beds: number
+          bedroom_4_bed_types: string[] | null
+          bedroom_5_beds: number
+          bedroom_5_bed_types: string[] | null
+          available_from: string | null
+          available_until: string | null
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          location?: string | null
+          price_per_night: number
+          max_guests: number
+          images?: string[] | null
+          created_at?: string
+          owner_id?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          featured?: boolean
+          updated_at?: string
+          street_name?: string | null
+          building_number?: string | null
           apartment_number?: string | null
+          additional_details?: string | null
+          google_location?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          is_draft?: boolean
+          total_beds?: number | null
+          location_details?: Json | null
+          image_details?: Json | null
+          primary_image?: string | null
+          image_count?: number
+          image_urls?: string[] | null
+          bedroom_1_beds?: number
+          bedroom_1_bed_types?: string[] | null
+          bedroom_2_beds?: number
+          bedroom_2_bed_types?: string[] | null
+          bedroom_3_beds?: number
+          bedroom_3_bed_types?: string[] | null
+          bedroom_4_beds?: number
+          bedroom_4_bed_types?: string[] | null
+          bedroom_5_beds?: number
+          bedroom_5_bed_types?: string[] | null
           available_from?: string | null
           available_until?: string | null
-          balcony?: boolean | null
-          bathrooms?: number | null
-          bbq?: boolean | null
-          bed_linen?: boolean | null
-          bedroom_1_bed_types?: string[] | null
-          bedroom_1_beds?: number | null
-          bedroom_2_bed_types?: string[] | null
-          bedroom_2_beds?: number | null
-          bedroom_3_bed_types?: string[] | null
-          bedroom_3_beds?: number | null
-          bedroom_4_bed_types?: string[] | null
-          bedroom_4_beds?: number | null
-          bedroom_5_bed_types?: string[] | null
-          bedroom_5_beds?: number | null
-          bedrooms?: number | null
-          building_number?: string | null
-          coffee_maker?: boolean | null
-          created_at?: string | null
-          description?: string | null
-          dishwasher?: boolean | null
-          dryer?: boolean | null
-          elevator?: boolean | null
-          featured?: boolean | null
-          fire_extinguisher?: boolean | null
-          first_aid?: boolean | null
-          garden?: boolean | null
-          google_location?: string | null
-          gym?: boolean | null
-          hair_dryer?: boolean | null
-          heating?: boolean | null
+          is_active?: boolean
+        }
+        Update: {
           id?: string
-          image_count?: number | null
-          image_details?: Json | null
-          image_urls?: string[] | null
-          images?: string[] | null
-          iron?: boolean | null
-          is_active?: boolean | null
-          is_draft?: boolean | null
-          kitchen?: boolean | null
-          latitude?: number | null
-          location?: string | null
-          location_details?: Json | null
-          longitude?: number | null
-          max_guests?: number
-          microwave?: boolean | null
           name?: string
-          netflix?: boolean | null
-          oven?: boolean | null
-          owner_id?: string | null
-          parking?: boolean | null
-          pool?: boolean | null
+          description?: string | null
+          location?: string | null
           price_per_night?: number
-          primary_image?: string | null
-          refrigerator?: boolean | null
-          security?: boolean | null
-          shampoo?: boolean | null
-          smoke_detector?: boolean | null
-          soap?: boolean | null
-          stove?: boolean | null
+          max_guests?: number
+          images?: string[] | null
+          created_at?: string
+          owner_id?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          featured?: boolean
+          updated_at?: string
           street_name?: string | null
-          terrace?: boolean | null
+          building_number?: string | null
+          apartment_number?: string | null
+          additional_details?: string | null
+          google_location?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          is_draft?: boolean
           total_beds?: number | null
-          towels?: boolean | null
-          tv?: boolean | null
-          updated_at?: string | null
-          washer?: boolean | null
-          wifi?: boolean | null
-          workspace?: boolean | null
+          location_details?: Json | null
+          image_details?: Json | null
+          primary_image?: string | null
+          image_count?: number
+          image_urls?: string[] | null
+          bedroom_1_beds?: number
+          bedroom_1_bed_types?: string[] | null
+          bedroom_2_beds?: number
+          bedroom_2_bed_types?: string[] | null
+          bedroom_3_beds?: number
+          bedroom_3_bed_types?: string[] | null
+          bedroom_4_beds?: number
+          bedroom_4_bed_types?: string[] | null
+          bedroom_5_beds?: number
+          bedroom_5_bed_types?: string[] | null
+          available_from?: string | null
+          available_until?: string | null
+          is_active?: boolean
         }
         Relationships: [
           {
@@ -253,185 +376,379 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       bookings: {
         Row: {
-          admin_notes: string | null
+          id: string
+          user_id: string | null
           apartment_id: string | null
           check_in: string
           check_out: string
-          created_at: string | null
-          guest_email: string | null
-          guest_name: string | null
-          guest_phone: string | null
           guests: number
-          id: string
-          notes: string | null
+          guest_name: string | null
+          guest_email: string | null
+          guest_phone: string | null
+          status: string
+          created_at: string
           payment_method: string | null
-          payment_status: string | null
-          status: string | null
           total_amount: number | null
-          user_id: string | null
+          payment_status: string
+          notes: string | null
+          admin_notes: string | null
         }
         Insert: {
-          admin_notes?: string | null
+          id?: string
+          user_id?: string | null
           apartment_id?: string | null
           check_in: string
           check_out: string
-          created_at?: string | null
-          guest_email?: string | null
-          guest_name?: string | null
-          guest_phone?: string | null
           guests: number
-          id?: string
-          notes?: string | null
+          guest_name?: string | null
+          guest_email?: string | null
+          guest_phone?: string | null
+          status?: string
+          created_at?: string
           payment_method?: string | null
-          payment_status?: string | null
-          status?: string | null
           total_amount?: number | null
-          user_id?: string | null
+          payment_status?: string
+          notes?: string | null
+          admin_notes?: string | null
         }
         Update: {
-          admin_notes?: string | null
+          id?: string
+          user_id?: string | null
           apartment_id?: string | null
           check_in?: string
           check_out?: string
-          created_at?: string | null
-          guest_email?: string | null
-          guest_name?: string | null
-          guest_phone?: string | null
           guests?: number
-          id?: string
-          notes?: string | null
+          guest_name?: string | null
+          guest_email?: string | null
+          guest_phone?: string | null
+          status?: string
+          created_at?: string
           payment_method?: string | null
-          payment_status?: string | null
-          status?: string | null
           total_amount?: number | null
-          user_id?: string | null
+          payment_status?: string
+          notes?: string | null
+          admin_notes?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_apartment_id_fkey"
             columns: ["apartment_id"]
             isOneToOne: false
             referencedRelation: "apartments"
             referencedColumns: ["id"]
+          }
+        ]
+      }
+      host_settings: {
+        Row: {
+          id: string
+          user_id: string
+          instant_book: boolean
+          manual_approval: boolean
+          auto_accept_booking: boolean
+          min_stay_nights: number
+          max_stay_nights: number | null
+          check_in_time: string
+          check_out_time: string
+          self_check_in: boolean
+          late_check_out: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          instant_book?: boolean
+          manual_approval?: boolean
+          auto_accept_booking?: boolean
+          min_stay_nights?: number
+          max_stay_nights?: number | null
+          check_in_time?: string
+          check_out_time?: string
+          self_check_in?: boolean
+          late_check_out?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          instant_book?: boolean
+          manual_approval?: boolean
+          auto_accept_booking?: boolean
+          min_stay_nights?: number
+          max_stay_nights?: number | null
+          check_in_time?: string
+          check_out_time?: string
+          self_check_in?: boolean
+          late_check_out?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "host_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      messages: {
+        Row: {
+          id: string
+          sender_id: string
+          receiver_id: string
+          apartment_id: string | null
+          booking_id: string | null
+          message: string
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          sender_id: string
+          receiver_id: string
+          apartment_id?: string | null
+          booking_id?: string | null
+          message: string
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          sender_id?: string
+          receiver_id?: string
+          apartment_id?: string | null
+          booking_id?: string | null
+          message?: string
+          is_read?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          message: string
+          type: string
+          is_read: boolean
+          related_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          message: string
+          type: string
+          is_read?: boolean
+          related_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          message?: string
+          type?: string
+          is_read?: boolean
+          related_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
         ]
       }
       profiles: {
         Row: {
-          created_at: string | null
-          email: string | null
-          first_name: string | null
           id: string
+          email: string | null
+          role: string
+          created_at: string
+          first_name: string | null
           last_name: string | null
           phone: string | null
-          role: string | null
         }
         Insert: {
-          created_at?: string | null
-          email?: string | null
-          first_name?: string | null
           id: string
+          email?: string | null
+          role?: string
+          created_at?: string
+          first_name?: string | null
           last_name?: string | null
           phone?: string | null
-          role?: string | null
         }
         Update: {
-          created_at?: string | null
-          email?: string | null
-          first_name?: string | null
           id?: string
+          email?: string | null
+          role?: string
+          created_at?: string
+          first_name?: string | null
           last_name?: string | null
           phone?: string | null
-          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      reviews: {
+        Row: {
+          id: string
+          apartment_id: string
+          user_id: string
+          booking_id: string | null
+          rating: number
+          cleanliness_rating: number | null
+          communication_rating: number | null
+          check_in_rating: number | null
+          accuracy_rating: number | null
+          location_rating: number | null
+          value_rating: number | null
+          comment: string | null
+          host_response: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          apartment_id: string
+          user_id: string
+          booking_id?: string | null
+          rating: number
+          cleanliness_rating?: number | null
+          communication_rating?: number | null
+          check_in_rating?: number | null
+          accuracy_rating?: number | null
+          location_rating?: number | null
+          value_rating?: number | null
+          comment?: string | null
+          host_response?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          apartment_id?: string
+          user_id?: string
+          booking_id?: string | null
+          rating?: number
+          cleanliness_rating?: number | null
+          communication_rating?: number | null
+          check_in_rating?: number | null
+          accuracy_rating?: number | null
+          location_rating?: number | null
+          value_rating?: number | null
+          comment?: string | null
+          host_response?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+    }
+    Views: {
+      apartment_amenities_view: {
+        Row: {
+          apartment_id: string | null
+          apartment_name: string | null
+          amenity_name: string | null
+          amenity_icon: string | null
+          category_name: string | null
+          category_icon: string | null
         }
         Relationships: []
       }
     }
-    Views: {
-      [_ in never]: never
-    }
     Functions: {
-      get_bed_details_text_from_columns: {
-        Args: { apartment_uuid: string }
-        Returns: string
-      }
-      get_total_bedrooms: {
-        Args: { apartment_uuid: string }
-        Returns: number
-      }
-      get_total_beds_from_columns: {
-        Args: { apartment_uuid: string }
-        Returns: number
-      }
-      insert_apartment_with_all_details: {
+      get_apartment_amenities: {
         Args: {
-          p_name: string
-          p_location: string
-          p_price_per_night: number
-          p_max_guests: number
-          p_description: string
-          p_bedrooms: number
-          p_bathrooms: number
-          p_street_name: string
-          p_building_number: string
-          p_apartment_number: string
-          p_additional_details: string
-          p_google_location: string
-          p_latitude: number
-          p_longitude: number
-          p_primary_image: string
-          p_image_urls: string[]
-          p_bedroom_1_beds?: number
-          p_bedroom_1_bed_types?: string[]
-          p_bedroom_2_beds?: number
-          p_bedroom_2_bed_types?: string[]
-          p_bedroom_3_beds?: number
-          p_bedroom_3_bed_types?: string[]
-          p_bedroom_4_beds?: number
-          p_bedroom_4_bed_types?: string[]
-          p_bedroom_5_beds?: number
-          p_bedroom_5_bed_types?: string[]
-          p_wifi?: boolean
-          p_air_conditioning?: boolean
-          p_heating?: boolean
-          p_kitchen?: boolean
-          p_washer?: boolean
-          p_dryer?: boolean
-          p_parking?: boolean
-          p_elevator?: boolean
-          p_gym?: boolean
-          p_pool?: boolean
-          p_balcony?: boolean
-          p_terrace?: boolean
-          p_tv?: boolean
-          p_netflix?: boolean
-          p_workspace?: boolean
-          p_iron?: boolean
-          p_hair_dryer?: boolean
-          p_shampoo?: boolean
-          p_soap?: boolean
-          p_towels?: boolean
-          p_bed_linen?: boolean
-          p_coffee_maker?: boolean
-          p_microwave?: boolean
-          p_dishwasher?: boolean
-          p_refrigerator?: boolean
-          p_oven?: boolean
-          p_stove?: boolean
-          p_bbq?: boolean
-          p_garden?: boolean
-          p_security?: boolean
-          p_smoke_detector?: boolean
-          p_first_aid?: boolean
-          p_fire_extinguisher?: boolean
-          p_is_draft?: boolean
+          apartment_uuid: string
         }
-        Returns: string
+        Returns: {
+          amenity_name: string
+          amenity_icon: string
+          category_name: string
+          category_icon: string
+        }[]
       }
     }
     Enums: {
@@ -443,125 +760,55 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+// Type aliases for easier use
+export type Apartment = Database['public']['Tables']['apartments']['Row'];
+export type ApartmentInsert = Database['public']['Tables']['apartments']['Insert'];
+export type ApartmentUpdate = Database['public']['Tables']['apartments']['Update'];
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+export type Booking = Database['public']['Tables']['bookings']['Row'];
+export type BookingInsert = Database['public']['Tables']['bookings']['Insert'];
+export type BookingUpdate = Database['public']['Tables']['bookings']['Update'];
 
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+export type Review = Database['public']['Tables']['reviews']['Row'];
+export type ReviewInsert = Database['public']['Tables']['reviews']['Insert'];
+export type ReviewUpdate = Database['public']['Tables']['reviews']['Update'];
 
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+export type Message = Database['public']['Tables']['messages']['Row'];
+export type MessageInsert = Database['public']['Tables']['messages']['Insert'];
+export type MessageUpdate = Database['public']['Tables']['messages']['Update'];
 
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+export type ApartmentImage = Database['public']['Tables']['apartment_images']['Row'];
+export type ApartmentImageInsert = Database['public']['Tables']['apartment_images']['Insert'];
+export type ApartmentImageUpdate = Database['public']['Tables']['apartment_images']['Update'];
 
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+export type ApartmentAvailability = Database['public']['Tables']['apartment_availability']['Row'];
+export type ApartmentAvailabilityInsert = Database['public']['Tables']['apartment_availability']['Insert'];
+export type ApartmentAvailabilityUpdate = Database['public']['Tables']['apartment_availability']['Update'];
 
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const
+export type Notification = Database['public']['Tables']['notifications']['Row'];
+export type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
+export type NotificationUpdate = Database['public']['Tables']['notifications']['Update'];
+
+export type AmenityCategory = Database['public']['Tables']['amenity_categories']['Row'];
+export type AmenityCategoryInsert = Database['public']['Tables']['amenity_categories']['Insert'];
+export type AmenityCategoryUpdate = Database['public']['Tables']['amenity_categories']['Update'];
+
+export type Amenity = Database['public']['Tables']['amenities']['Row'];
+export type AmenityInsert = Database['public']['Tables']['amenities']['Insert'];
+export type AmenityUpdate = Database['public']['Tables']['amenities']['Update'];
+
+export type ApartmentAmenity = Database['public']['Tables']['apartment_amenities']['Row'];
+export type ApartmentAmenityInsert = Database['public']['Tables']['apartment_amenities']['Insert'];
+export type ApartmentAmenityUpdate = Database['public']['Tables']['apartment_amenities']['Update'];
+
+export type HostSettings = Database['public']['Tables']['host_settings']['Row'];
+export type HostSettingsInsert = Database['public']['Tables']['host_settings']['Insert'];
+export type HostSettingsUpdate = Database['public']['Tables']['host_settings']['Update'];
+
+export type ApartmentPricing = Database['public']['Tables']['apartment_pricing']['Row'];
+export type ApartmentPricingInsert = Database['public']['Tables']['apartment_pricing']['Insert'];
+export type ApartmentPricingUpdate = Database['public']['Tables']['apartment_pricing']['Update'];

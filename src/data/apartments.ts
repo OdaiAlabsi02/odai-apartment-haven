@@ -1,8 +1,8 @@
 export interface Apartment {
   id: string;
-  name: string;
-  location: string;
-  price_per_night: number;
+  title: string; // Changed from name
+  city: string; // Changed from location
+  base_price: number; // Changed from price_per_night
   max_guests: number;
   bathrooms: number;
   description: string;
@@ -11,13 +11,16 @@ export interface Apartment {
   updated_at?: string;
   
   // Location details (individual fields)
-  street_name?: string;
-  building_number?: string;
+  address_line1?: string; // Changed from street_name
+  address_line2?: string; // Changed from building_number
   apartment_number?: string;
   additional_details?: string;
   google_location?: string;
   latitude?: number;
   longitude?: number;
+  state?: string; // Added
+  country?: string; // Added
+  postal_code?: string; // Added
   
   // Image details (individual fields)
   primary_image?: string;
@@ -37,6 +40,31 @@ export interface Apartment {
   bedroom_4_bed_types?: string[];
   bedroom_5_beds?: number;
   bedroom_5_bed_types?: string[];
+  
+  // Property type fields
+  property_type?: string; // Added
+  property_subtype?: string; // Added
+  listing_type?: string; // Added
+  room_type?: string; // Added
+  beds?: number; // Added
+  square_feet?: number; // Added
+  minimum_stay?: number; // Added
+  maximum_stay?: number; // Added
+  check_in_time?: string; // Added
+  check_out_time?: string; // Added
+  is_instant_book?: boolean; // Added
+  is_active?: boolean; // Added
+  currency?: string; // Added
+  cleaning_fee?: number; // Added
+  security_deposit?: number; // Added
+  host_id?: string; // Added
+  
+  // Building details
+  building_floors?: number; // Added
+  listing_floor?: number; // Added
+  building_age?: string; // Added
+  unit_size?: string; // Added
+  unit_size_unit?: string; // Added
   
   // Amenities (individual boolean fields)
   wifi?: boolean;
@@ -72,14 +100,19 @@ export interface Apartment {
   smoke_detector?: boolean;
   first_aid?: boolean;
   fire_extinguisher?: boolean;
+  
+  // Legacy fields for backward compatibility
+  name?: string; // Keep for backward compatibility
+  location?: string; // Keep for backward compatibility
+  price_per_night?: number; // Keep for backward compatibility
 }
 
 export const apartments: Apartment[] = [
   {
     id: "1",
-    name: "Modern Downtown Loft",
-    location: "City Center, Downtown",
-    price_per_night: 120,
+    title: "Modern Downtown Loft", // Changed from name
+    city: "City Center, Downtown", // Changed from location
+    base_price: 120, // Changed from price_per_night
     max_guests: 4,
     bathrooms: 2,
     description: "A stunning modern loft in the heart of downtown. Features floor-to-ceiling windows, exposed brick walls, and contemporary furnishings. Perfect for business travelers or couples looking for a luxurious stay.",
@@ -114,19 +147,23 @@ export const apartments: Apartment[] = [
       "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800"
     ],
     image_count: 3,
-    street_name: "Main St",
-    building_number: "100",
+    address_line1: "Main St", // Changed from street_name
+    address_line2: "100", // Changed from building_number
     apartment_number: "A1",
     additional_details: "Close to public transport",
     google_location: "https://www.google.com/maps/place/Main+St+100+A1",
     latitude: 40.7128,
-    longitude: -74.0060
+    longitude: -74.0060,
+    // Legacy fields for backward compatibility
+    name: "Modern Downtown Loft",
+    location: "City Center, Downtown",
+    price_per_night: 120
   },
   {
     id: "2",
-    name: "Cozy Garden Apartment",
-    location: "Green District, Suburbs",
-    price_per_night: 85,
+    title: "Cozy Garden Apartment", // Changed from name
+    city: "Green District, Suburbs", // Changed from location
+    base_price: 85, // Changed from price_per_night
     max_guests: 6,
     bathrooms: 2,
     description: "Charming apartment with a beautiful garden view. Peaceful neighborhood perfect for families or those seeking tranquility while staying close to the city.",
@@ -144,19 +181,23 @@ export const apartments: Apartment[] = [
       "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800"
     ],
     image_count: 2,
-    street_name: "Oak Ave",
-    building_number: "200",
+    address_line1: "Oak Ave", // Changed from street_name
+    address_line2: "200", // Changed from building_number
     apartment_number: "B2",
     additional_details: "Near a park",
     google_location: "https://www.google.com/maps/place/Oak+Ave+200+B2",
     latitude: 40.7500,
-    longitude: -73.9800
+    longitude: -73.9800,
+    // Legacy fields for backward compatibility
+    name: "Cozy Garden Apartment",
+    location: "Green District, Suburbs",
+    price_per_night: 85
   },
   {
     id: "3",
-    name: "Luxury Penthouse Suite",
-    location: "Uptown, Financial District",
-    price_per_night: 250,
+    title: "Luxury Penthouse Suite", // Changed from name
+    city: "Uptown, Financial District", // Changed from location
+    base_price: 250, // Changed from price_per_night
     max_guests: 2,
     bathrooms: 2,
     description: "Exclusive penthouse with panoramic city views. Premium amenities and sophisticated design make this the perfect choice for luxury travelers.",
@@ -172,39 +213,10 @@ export const apartments: Apartment[] = [
       "https://images.unsplash.com/photo-1556020685-ae41abfc9365?w=800"
     ],
     image_count: 2,
-    street_name: "Pine Ln",
-    building_number: "300",
-    apartment_number: "C3",
-    additional_details: "Near a gym",
-    google_location: "https://www.google.com/maps/place/Pine+Ln+300+C3",
-    latitude: 40.7000,
-    longitude: -74.0100
-  },
-  {
-    id: "4",
-    name: "Artist's Studio",
-    location: "Arts Quarter, Midtown",
-    price_per_night: 95,
-    max_guests: 2,
-    bathrooms: 1,
-    description: "Creative space in the vibrant Arts Quarter. High ceilings, natural light, and artistic atmosphere perfect for creative professionals.",
-    featured: false,
-    bedrooms: 1,
-    total_beds: 1,
-    wifi: true,
-    workspace: true,
-    primary_image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
-    image_urls: [
-      "https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=800",
-      "https://images.unsplash.com/photo-1571088724734-2a8e3b8174fb?w=800"
-    ],
-    image_count: 2,
-    street_name: "Maple St",
-    building_number: "400",
-    apartment_number: "D4",
-    additional_details: "Near a gallery",
-    google_location: "https://www.google.com/maps/place/Maple+St+400+D4",
-    latitude: 40.7200,
-    longitude: -74.0050
+    address_line1: "Pine Ln", // Changed from street_name
+    // Legacy fields for backward compatibility
+    name: "Luxury Penthouse Suite",
+    location: "Uptown, Financial District",
+    price_per_night: 250
   }
 ];
