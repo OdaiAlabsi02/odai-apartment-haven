@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ApartmentCard } from "@/components/ApartmentCard";
 
 import heroImage from "@/assets/hero-apartment.jpg";
-import { useApartments } from "@/hooks/useApartments";
+import { useApartmentsWithFallback } from "@/hooks/useApartmentsWithFallback";
 
 export const HomePage = () => {
-  const { apartments, loading } = useApartments();
+  const { apartments, loading, connectionStatus, usingDemoData } = useApartmentsWithFallback();
   
   // Show featured apartments if they exist, otherwise show first 2 apartments from database
   const featuredApartments = apartments.length > 0
@@ -76,7 +76,44 @@ export const HomePage = () => {
         </div>
       </section>
 
+      {/* Connection Status Banner */}
+      {connectionStatus === 'fallback' && (
+        <section className="py-4 bg-blue-50 border-l-4 border-blue-400">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-700">
+                  <strong>Using Real Data (Offline Mode).</strong> We're experiencing temporary connectivity issues with our database. You're viewing real apartment data from our backup system.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
+      {connectionStatus === 'failed' && (
+        <section className="py-4 bg-yellow-50 border-l-4 border-yellow-400">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>Demo Mode Active.</strong> We're experiencing database connectivity issues. You're currently viewing demo apartment data.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Featured Apartments */}
       <section className="py-16 bg-muted/30">

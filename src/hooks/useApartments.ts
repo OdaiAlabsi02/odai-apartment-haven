@@ -35,22 +35,44 @@ export function useApartments() {
       
       // Add timeout to prevent infinite loading
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
+        setTimeout(() => reject(new Error('Request timeout')), 15000)
       );
       
       const fetchPromise = (async () => {
-        // Test basic connection first
-        console.log('Testing basic Supabase connection...');
+        // Test basic connection first with a simple fetch to check DNS resolution
+        console.log('Testing DNS resolution and basic connection...');
+        
+        try {
+          // First test if we can reach the Supabase domain at all
+          const testResponse = await fetch('https://zwgnhwnrlekinkvpchhs.supabase.co/rest/v1/', {
+            method: 'HEAD',
+            headers: {
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3Z25od25ybGVraW5rdnBjaGhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwNTEyNjksImV4cCI6MjA2NzYyNzI2OX0.9ybNKhkQW6U7Soml3DftRDUpkiW6MNLv7YH1N60HT6s',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3Z25od25ybGVraW5rdnBjaGhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwNTEyNjksImV4cCI6MjA2NzYyNzI2OX0.9ybNKhkQW6U7Soml3DftRDUpkiW6MNLv7YH1N60HT6s'}`
+            }
+          });
+          
+          if (!testResponse.ok) {
+            throw new Error(`DNS/Connection test failed: ${testResponse.status} ${testResponse.statusText}`);
+          }
+          
+          console.log('DNS resolution successful, testing Supabase client...');
+        } catch (dnsError) {
+          console.error('DNS resolution failed:', dnsError);
+          throw new Error(`Network error: Unable to reach Supabase server. This may be a temporary DNS issue.`);
+        }
+        
+        // Test basic connection with Supabase client
         const { data: testData, error: testError } = await supabase
           .from('properties')
           .select('id')
           .limit(1);
         
         if (testError) {
-          console.error('Basic connection test failed:', testError);
+          console.error('Supabase client test failed:', testError);
           throw testError;
         }
-        console.log('Basic connection test successful, found', testData?.length || 0, 'properties');
+        console.log('Supabase client test successful, found', testData?.length || 0, 'properties');
         
         // First fetch all properties
         const { data: properties, error: propertiesError } = await (retry(() =>
