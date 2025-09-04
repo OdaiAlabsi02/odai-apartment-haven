@@ -38,6 +38,8 @@ export class SupabaseProxyClient {
 
   private async makeRequest(method: string, endpoint: string, body?: any) {
     try {
+      console.log(`Making proxy request: ${method} ${endpoint}`);
+      
       const response = await fetch(`${this.baseUrl}?endpoint=${endpoint}&method=${method}`, {
         method: 'POST',
         headers: {
@@ -48,10 +50,13 @@ export class SupabaseProxyClient {
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('Proxy request failed:', error);
         throw new Error(error.message || `HTTP ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log(`Proxy request successful, got ${Array.isArray(data) ? data.length : 1} items`);
+      return data;
     } catch (error) {
       console.error('Proxy request failed:', error);
       throw error;

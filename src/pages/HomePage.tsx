@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ApartmentCard } from "@/components/ApartmentCard";
 
 import heroImage from "@/assets/hero-apartment.jpg";
-import { useApartmentsWithFallback } from "@/hooks/useApartmentsWithFallback";
+import { useApartmentsProxy } from "@/hooks/useApartmentsProxy";
 
 export const HomePage = () => {
-  const { apartments, loading, connectionStatus, usingDemoData } = useApartmentsWithFallback();
+  const { apartments, loading, connectionStatus, usingDemoData } = useApartmentsProxy();
   
   // Show featured apartments if they exist, otherwise show first 2 apartments from database
   const featuredApartments = apartments.length > 0
