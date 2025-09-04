@@ -6,7 +6,7 @@ import { apartments as demoApartments } from '../data/apartments';
 // Real apartment data from Supabase (hardcoded as fallback)
 const realApartments: Apartment[] = [
   {
-    id: "b7a51469-211e-45c3-adf4-e997c8177f81",
+    id: "550e8400-e29b-41d4-a716-446655440001",
     title: "Apartment in Amman 3Bedroom with Terrace",
     city: "Amman",
     base_price: 60,
@@ -61,7 +61,7 @@ const realApartments: Apartment[] = [
     unit_size_unit: "sqm"
   },
   {
-    id: "72cb63c5-90af-4d22-a2ca-d9b7e928d3ab",
+    id: "550e8400-e29b-41d4-a716-446655440002",
     title: "Gather 'n' Gab Gateway",
     city: "Amman",
     base_price: 50,
