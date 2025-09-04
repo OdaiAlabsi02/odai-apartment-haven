@@ -30,6 +30,8 @@ export function useApartments() {
       setLoading(true);
       
       console.log('Connecting to Supabase...');
+      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL || 'https://zwgnhwnrlekinkvpchhs.supabase.co');
+      console.log('Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
       
       // Add timeout to prevent infinite loading
       const timeoutPromise = new Promise((_, reject) => 
@@ -37,6 +39,19 @@ export function useApartments() {
       );
       
       const fetchPromise = (async () => {
+        // Test basic connection first
+        console.log('Testing basic Supabase connection...');
+        const { data: testData, error: testError } = await supabase
+          .from('properties')
+          .select('id')
+          .limit(1);
+        
+        if (testError) {
+          console.error('Basic connection test failed:', testError);
+          throw testError;
+        }
+        console.log('Basic connection test successful, found', testData?.length || 0, 'properties');
+        
         // First fetch all properties
         const { data: properties, error: propertiesError } = await (retry(() =>
           supabase
@@ -46,7 +61,13 @@ export function useApartments() {
         ) as unknown as Promise<{ data: any[]; error: any }>);
 
         if (propertiesError) {
-          console.warn('Supabase error, falling back to demo data:', propertiesError);
+          console.error('Supabase properties error:', propertiesError);
+          console.error('Error details:', {
+            message: propertiesError.message,
+            details: propertiesError.details,
+            hint: propertiesError.hint,
+            code: propertiesError.code
+          });
           throw propertiesError;
         }
 
