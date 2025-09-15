@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Users, Bed, Bath, Calendar, ChevronLeft, ChevronRight, Check, Loader2, Star, Wifi, Car, Waves, ChefHat, Shield, Heart, Wind, Coffee, Flame, Home, Dumbbell, Trees, Tv, Laptop, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { jordanProperties, JordanProperty } from "@/data/jordanProperties";
 
 export const ApartmentDetailsPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const property = jordanProperties.find(prop => prop.id === id);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -87,13 +88,13 @@ export const ApartmentDetailsPage = () => {
   const handleBookNow = () => {
     if (!isAuthenticated) {
       // Redirect to login page
-      window.location.href = '/login';
+      navigate('/login');
       return;
     }
 
     if (!hasPaymentMethod) {
       // Redirect to profile to add payment method
-      window.location.href = '/profile?tab=payment';
+      navigate('/profile?tab=payment');
       return;
     }
 

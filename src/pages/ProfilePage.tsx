@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, MapPin, DollarSign, User, Mail, Phone, Edit, Save, X, AlertCircle, Eye } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Users, MapPin, DollarSign, User, Mail, Phone, Edit, Save, X, AlertCircle, Eye, CreditCard, Plus, Trash2 } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import { supabase } from "../lib/supabaseClient";
 import { DetailedBookingModal } from "@/components/DetailedBookingModal";
@@ -75,6 +76,15 @@ export const ProfilePage = () => {
   });
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
+  const [newPaymentMethod, setNewPaymentMethod] = useState({
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    cardholderName: '',
+    isDefault: false
+  });
   const { getApartmentById } = useApartments();
 
   useEffect(() => {
@@ -242,6 +252,50 @@ export const ProfilePage = () => {
     setIsEditing(false);
   };
 
+  const handleAddPaymentMethod = () => {
+    // In a real app, this would integrate with a payment processor
+    const newMethod = {
+      id: Date.now().toString(),
+      ...newPaymentMethod,
+      last4: newPaymentMethod.cardNumber.slice(-4),
+      type: 'visa' // This would be determined by card number
+    };
+    
+    setPaymentMethods(prev => [...prev, newMethod]);
+    setNewPaymentMethod({
+      cardNumber: '',
+      expiryDate: '',
+      cvv: '',
+      cardholderName: '',
+      isDefault: false
+    });
+    setIsAddingPayment(false);
+    
+    toast({
+      title: "Success",
+      description: "Payment method added successfully"
+    });
+  };
+
+  const handleRemovePaymentMethod = (id: string) => {
+    setPaymentMethods(prev => prev.filter(method => method.id !== id));
+    toast({
+      title: "Success",
+      description: "Payment method removed"
+    });
+  };
+
+  const handleSetDefaultPayment = (id: string) => {
+    setPaymentMethods(prev => prev.map(method => ({
+      ...method,
+      isDefault: method.id === id
+    })));
+    toast({
+      title: "Success",
+      description: "Default payment method updated"
+    });
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -303,6 +357,14 @@ export const ProfilePage = () => {
 
         {/* User Profile Section */}
         {user && profile && (
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="bookings">Bookings</TabsTrigger>
+              <TabsTrigger value="payment">Payment</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="profile" className="mt-6">
           <Card className="mb-8">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -416,9 +478,228 @@ export const ProfilePage = () => {
               )}
             </CardContent>
           </Card>
+            </TabsContent>
+            
+            <TabsContent value="bookings" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Your Bookings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {userBookings.length > 0 ? (
+                    <div className="space-y-4">
+                      {userBookings.map((booking) => (
+                        <div 
+                          key={booking.id} 
+                          className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => handleViewBookingDetails(booking)}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="font-semibold text-lg">{booking.apartmentTitle || 'Property'}</h4>
+                              {booking.apartmentCity && (
+                                <p className="text-muted-foreground flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  {booking.apartmentCity}
+                                </p>
+                              )}
+                            </div>
+                            <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'}>
+                              {booking.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">Check-in</p>
+                                <p>{formatDate(booking.check_in_date)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">Check-out</p>
+                                <p>{formatDate(booking.check_out_date)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">Guests</p>
+                                <p>{booking.guests}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">Total</p>
+                                <p className="font-semibold">{booking.total_amount} JOD</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Start exploring our properties and make your first booking!
+                      </p>
+                      <Button onClick={() => window.location.href = '/'}>
+                        Browse Properties
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="payment" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Payment Methods
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {paymentMethods.length > 0 ? (
+                    <div className="space-y-4">
+                      {paymentMethods.map((method) => (
+                        <div key={method.id} className="p-4 border rounded-lg flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <CreditCard className="h-5 w-5 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">**** **** **** {method.last4}</p>
+                              <p className="text-sm text-muted-foreground">{method.type.toUpperCase()}</p>
+                              {method.isDefault && (
+                                <Badge variant="default" className="mt-1">Default</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {!method.isDefault && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleSetDefaultPayment(method.id)}
+                              >
+                                Set Default
+                              </Button>
+                            )}
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleRemovePaymentMethod(method.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No payment methods</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Add a payment method to make bookings easier
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="mt-6">
+                    {isAddingPayment ? (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Add Payment Method</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <Label htmlFor="cardNumber">Card Number</Label>
+                            <Input
+                              id="cardNumber"
+                              placeholder="1234 5678 9012 3456"
+                              value={newPaymentMethod.cardNumber}
+                              onChange={(e) => setNewPaymentMethod(prev => ({ ...prev, cardNumber: e.target.value }))}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="expiryDate">Expiry Date</Label>
+                              <Input
+                                id="expiryDate"
+                                placeholder="MM/YY"
+                                value={newPaymentMethod.expiryDate}
+                                onChange={(e) => setNewPaymentMethod(prev => ({ ...prev, expiryDate: e.target.value }))}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="cvv">CVV</Label>
+                              <Input
+                                id="cvv"
+                                placeholder="123"
+                                value={newPaymentMethod.cvv}
+                                onChange={(e) => setNewPaymentMethod(prev => ({ ...prev, cvv: e.target.value }))}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor="cardholderName">Cardholder Name</Label>
+                            <Input
+                              id="cardholderName"
+                              placeholder="John Doe"
+                              value={newPaymentMethod.cardholderName}
+                              onChange={(e) => setNewPaymentMethod(prev => ({ ...prev, cardholderName: e.target.value }))}
+                            />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="isDefault"
+                              checked={newPaymentMethod.isDefault}
+                              onChange={(e) => setNewPaymentMethod(prev => ({ ...prev, isDefault: e.target.checked }))}
+                            />
+                            <Label htmlFor="isDefault">Set as default payment method</Label>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setIsAddingPayment(false)}
+                              className="flex-1"
+                            >
+                              Cancel
+                            </Button>
+                            <Button 
+                              onClick={handleAddPaymentMethod}
+                              className="flex-1"
+                            >
+                              Add Payment Method
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Button onClick={() => setIsAddingPayment(true)} className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Payment Method
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         )}
 
-        {/* Booking History Section */}
+        {/* Guest Bookings Section */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
