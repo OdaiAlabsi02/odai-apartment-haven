@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { SearchBox } from "@/components/SearchBox";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyFilters } from "@/components/PropertyFilters";
-import { jordanProperties, JordanProperty, popularDestinations } from "@/data/jordanProperties";
+import { jordanProperties, JordanProperty } from "@/data/jordanProperties";
 import heroImage from "@/assets/hero-apartment.jpg";
 
 interface FilterState {
@@ -17,6 +18,7 @@ interface FilterState {
 }
 
 export const HomePage = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useState({
     location: '',
     checkIn: '',
@@ -119,16 +121,19 @@ export const HomePage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
         
         {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 max-w-6xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
-            Discover Jordan's
-            <span className="block text-yellow-400 drop-shadow-sm">
-              Hidden Gems
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 animate-slide-up mb-12 max-w-3xl mx-auto">
-            From ancient Petra to pristine Red Sea shores, find unique stays that capture the soul of Jordan
-          </p>
+        <div className="relative z-10 px-4 max-w-6xl mx-auto">
+          {/* Title positioned to the left */}
+          <div className="text-left mb-8">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
+              Discover Jordan's
+              <span className="block text-yellow-400 drop-shadow-sm">
+                Hidden Gems
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-white/90 animate-slide-up max-w-3xl">
+              From ancient Petra to pristine Red Sea shores, find unique stays that capture the soul of Jordan
+            </p>
+          </div>
           
           {/* Search Box */}
           <div className="animate-slide-up">
@@ -144,28 +149,6 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* Popular Destinations Section - Positioned higher */}
-      <section className="bg-gray-50 py-12 -mt-16 relative z-10">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-700 mb-6">Popular destinations:</h3>
-            <div className="flex flex-wrap justify-center gap-3">
-              {popularDestinations.map((destination) => (
-                <button
-                  key={destination.name}
-                  onClick={() => handleSearch({
-                    ...searchParams,
-                    location: destination.name
-                  })}
-                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:scale-105 shadow-sm border"
-                >
-                  {destination.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Main Content with Built-in Sidebar Layout */}
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -204,14 +187,13 @@ export const HomePage = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {filteredProperties.map((property) => (
                   <PropertyCard
                     key={property.id}
                     property={property}
                     onClick={() => {
-                      // Navigate to property details
-                      console.log('Navigate to property:', property.id);
+                      navigate(`/apartment/${property.id}`);
                     }}
                   />
                 ))}

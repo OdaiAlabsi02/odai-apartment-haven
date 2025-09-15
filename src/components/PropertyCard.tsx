@@ -1,6 +1,8 @@
-import { Star, MapPin, Users, Bed, Bath } from 'lucide-react';
+import { useState } from 'react';
+import { Star, MapPin, Users, Bed, Bath, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { JordanProperty } from '@/data/jordanProperties';
 
 interface PropertyCardProps {
@@ -9,8 +11,27 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Create multiple images for carousel (using the same image for now, but you can add more)
+  const images = [
+    property.image_url,
+    property.image_url, // You can add more images here
+    property.image_url
+  ];
+
   const formatPrice = (price: number) => {
     return `${price} JOD per night`;
+  };
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
   const renderStars = (rating: number) => {
@@ -47,7 +68,7 @@ export const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
     >
       <div className="relative">
         <img
-          src={property.image_url}
+          src={images[currentImageIndex]}
           alt={property.title}
           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -62,6 +83,38 @@ export const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
             <span className="ml-1">({property.review_count})</span>
           </div>
         </div>
+        
+        {/* Image Navigation Arrows */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={prevImage}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={nextImage}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        
+        {/* Image Indicators */}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+            {images.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full ${
+                  index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <CardContent className="p-4">
