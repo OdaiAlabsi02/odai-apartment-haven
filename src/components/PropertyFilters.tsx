@@ -34,7 +34,10 @@ export const PropertyFilters = ({
   onApplyFilters, 
   onClearFilters 
 }: PropertyFiltersProps) => {
-  const [localFilters, setLocalFilters] = useState<FilterState>(filters);
+  const [localFilters, setLocalFilters] = useState<FilterState>({
+    ...filters,
+    propertyType: filters.propertyType || 'any'
+  });
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
@@ -62,7 +65,7 @@ export const PropertyFilters = ({
       checkOut: '',
       guests: '1',
       priceRange: [0, 500],
-      propertyType: '',
+      propertyType: 'any',
       amenities: [],
       minRating: 0
     };
@@ -175,7 +178,7 @@ export const PropertyFilters = ({
               <SelectValue placeholder="Any type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any type</SelectItem>
+              <SelectItem value="any">Any type</SelectItem>
               {propertyTypes.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}

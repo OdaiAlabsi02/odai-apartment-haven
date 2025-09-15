@@ -30,7 +30,7 @@ export const HomePage = () => {
     checkOut: '',
     guests: '1',
     priceRange: [0, 500],
-    propertyType: '',
+    propertyType: 'any',
     amenities: [],
     minRating: 0
   });
@@ -50,7 +50,7 @@ export const HomePage = () => {
       }
 
       // Property type filter
-      if (filters.propertyType && property.property_type !== filters.propertyType) {
+      if (filters.propertyType && filters.propertyType !== 'any' && property.property_type !== filters.propertyType) {
         return false;
       }
 
@@ -102,7 +102,7 @@ export const HomePage = () => {
       checkOut: '',
       guests: '1',
       priceRange: [0, 500],
-      propertyType: '',
+      propertyType: 'any',
       amenities: [],
       minRating: 0
     });
