@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global 80% zoom for all pages */
+html {
+  zoom: 0.8;
+}
+
+/* Ensure proper scaling on different devices */
+@media (max-width: 768px) {
+  html {
+    zoom: 0.9;
+  }
+}
+
 /* Odai's Apartment Booking - Warm, elegant design system
 All colors MUST be HSL for consistency */
 

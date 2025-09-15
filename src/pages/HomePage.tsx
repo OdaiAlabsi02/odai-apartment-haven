@@ -121,19 +121,16 @@ export const HomePage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
         
         {/* Hero Content */}
-        <div className="relative z-10 px-4 max-w-6xl mx-auto">
-          {/* Title positioned to the left */}
-          <div className="text-left mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
-              Discover Jordan's
-              <span className="block text-yellow-400 drop-shadow-sm">
-                Hidden Gems
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 animate-slide-up max-w-3xl">
-              From ancient Petra to pristine Red Sea shores, find unique stays that capture the soul of Jordan
-            </p>
-          </div>
+        <div className="relative z-10 text-center px-4 max-w-6xl mx-auto">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
+            Discover Jordan's
+            <span className="block text-yellow-400 drop-shadow-sm">
+              Hidden Gems
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 animate-slide-up mb-12 max-w-3xl mx-auto">
+            From ancient Petra to pristine Red Sea shores, find unique stays that capture the soul of Jordan
+          </p>
           
           {/* Search Box */}
           <div className="animate-slide-up">
