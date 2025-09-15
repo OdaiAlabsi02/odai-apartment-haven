@@ -8,7 +8,7 @@ export class SupabaseProxyClient {
     this.baseUrl = '/api/supabase-proxy';
   }
 
-  async from(table: string) {
+  from(table: string) {
     return {
       select: (columns: string = '*') => ({
         eq: (column: string, value: any) => ({

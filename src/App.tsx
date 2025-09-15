@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { HomePage } from "./pages/HomePage";
-import { ApartmentsPage } from "./pages/ApartmentsPage";
 import { ApartmentDetailsPage } from "./pages/ApartmentDetailsPage";
 import { BookingPage } from "./pages/BookingPage";
 import { BookingConfirmationPage } from "./pages/BookingConfirmationPage";
@@ -45,11 +44,11 @@ function AppWithRouterLogic() {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/apartments" element={<ApartmentsPage />} />
           <Route path="/apartment/:id" element={<ApartmentDetailsPage />} />
           <Route path="/book/:id" element={<BookingPage />} />
           <Route path="/booking-confirmation" element={<BookingConfirmationPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/auth/callback" element={<div>Processing authentication...</div>} />
           <Route path="/admin" element={<AdminPage />}>
             <Route index element={<DashboardPage />} />
             <Route path="dashboard" element={<DashboardPage />} />

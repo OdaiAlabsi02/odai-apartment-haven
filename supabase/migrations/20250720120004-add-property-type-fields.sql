@@ -29,3 +29,6 @@ CREATE INDEX IF NOT EXISTS idx_properties_building_floors ON public.properties(b
 
 
 
+
+
+

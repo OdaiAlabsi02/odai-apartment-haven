@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Building2, Phone, User } from "lucide-react";
+import { Home, Phone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
@@ -11,7 +11,6 @@ export const Navbar = () => {
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
-    { path: "/apartments", label: "Apartments", icon: Building2 },
     { path: "/contact", label: "Contact", icon: Phone },
   ];
 

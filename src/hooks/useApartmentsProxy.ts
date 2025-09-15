@@ -137,12 +137,19 @@ export function useApartmentsProxy() {
       );
       
       const proxyPromise = (async () => {
-        const data = await supabaseProxy
-          .from('properties')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(10);
-        
+        // Make direct API call to the proxy
+        const response = await fetch('/api/supabase-proxy?endpoint=properties&select=*&order=created_at.desc&limit=10', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Proxy request failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
         return data;
       })();
       
@@ -172,11 +179,19 @@ export function useApartmentsProxy() {
   const insertApartment = async (apartmentData: any) => {
     try {
       if (connectionStatus === 'connected') {
-        const data = await supabaseProxy
-          .from('properties')
-          .insert(apartmentData)
-          .select();
+        const response = await fetch('/api/supabase-proxy?endpoint=properties&method=POST', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(apartmentData)
+        });
 
+        if (!response.ok) {
+          throw new Error(`Insert failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
         await fetchApartments();
         return data[0];
       } else {
@@ -194,12 +209,19 @@ export function useApartmentsProxy() {
   const updateApartment = async (id: string, updates: Partial<Apartment>) => {
     try {
       if (connectionStatus === 'connected') {
-        const data = await supabaseProxy
-          .from('properties')
-          .update(updates)
-          .eq('id', id)
-          .select();
+        const response = await fetch(`/api/supabase-proxy?endpoint=properties?id=eq.${id}&method=PATCH`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates)
+        });
 
+        if (!response.ok) {
+          throw new Error(`Update failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
         await fetchApartments();
         return data[0];
       } else {
@@ -218,10 +240,16 @@ export function useApartmentsProxy() {
   const deleteApartment = async (id: string) => {
     try {
       if (connectionStatus === 'connected') {
-        await supabaseProxy
-          .from('properties')
-          .delete()
-          .eq('id', id);
+        const response = await fetch(`/api/supabase-proxy?endpoint=properties?id=eq.${id}&method=DELETE`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Delete failed: ${response.status} ${response.statusText}`);
+        }
 
         await fetchApartments();
       } else {
@@ -237,13 +265,19 @@ export function useApartmentsProxy() {
   const getApartmentById = async (id: string) => {
     if (connectionStatus === 'connected') {
       try {
-        const data = await supabaseProxy
-          .from('properties')
-          .select('*')
-          .eq('id', id)
-          .single();
+        const response = await fetch(`/api/supabase-proxy?endpoint=properties?select=*&id=eq.${id}&limit=1`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
 
-        return data;
+        if (!response.ok) {
+          throw new Error(`Get failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data[0];
       } catch (err) {
         // Fallback to local data
         return realApartments.find(apt => apt.id === id) || demoApartments.find(apt => apt.id === id);

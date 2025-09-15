@@ -1,0 +1,114 @@
+Build an Airbnb‑like apartment booking web app (not services/experiences/co‑hosting). Two roles: Customer and Admin (me). Focus on property listings, availability calendars, search/filters, booking by nights, secure checkout, and an admin dashboard. Use Supabase for auth, database, and storage; use Stripe for payments.
+
+Primary goal
+- Create an MVP similar to Airbnb lodging bookings (properties, dates, price per night, fees, taxes) with a clean modern UI.
+- Customer can browse listings, view details, select dates, see price breakdown, and pay with Stripe.
+- Admin can create/edit/delete properties, manage images, set availability/seasonal rules, and manage bookings.
+
+Non‑goals (explicitly exclude)
+- No co‑hosting, services marketplace, experiences, flight/car rentals, or host payout marketplace.
+- No complex messaging/inbox or review system in MVP.
+
+Tech stack
+- Frontend: React + Vite + TypeScript, Tailwind CSS, shadcn/ui components.
+- Backend: Supabase (Postgres, Auth, Storage, optional Edge Functions).
+- Payments: Stripe (Payment Elements, Webhooks).
+
+Environments
+- Local development: hardcode Supabase project URL and anon key directly in code (no .env required for local).
+- Production: use environment variables for Supabase and Stripe keys.
+
+Core features
+1) Customer experience (like Airbnb)
+- Home/Listings: grid of properties with thumbnail, title, location, rating placeholder, price per night.
+- Filters: location (city/country), date range, guests, price range, property type, amenities.
+- Search: keyword/location input with suggestions.
+- Property details page: image gallery, description, amenities, max guests, beds/baths, map placeholder, availability calendar, price breakdown (nightly x nights, cleaning fee, taxes), and a Book button.
+- Availability calendar: disable unavailable dates; allow date‑range selection; reflect min/max nights.
+- Booking flow: select dates, guests → review breakdown → checkout with Stripe Payment Element; handle success/cancel URLs.
+- Booking confirmation: show reservation details and reference ID.
+- Account: sign up/in/out with Supabase Auth; profile page with basic info and list of bookings.
+
+2) Admin experience
+- Admin login via Supabase Auth with role/claims.
+- Dashboard: KPIs (bookings, occupancy), recent reservations.
+- Properties management: create/update/delete property, set nightly base price, cleaning fee, taxes, max guests, property type, amenities, location, description.
+- Image upload: multi‑image support via Supabase Storage; reorder and set cover.
+- Availability management: block dates, seasonal rules (min nights, price overrides), blackout periods.
+- Bookings management: view all bookings, adjust status, initiate refunds/cancellations.
+
+Stripe integration
+- Use Stripe Checkout or Payment Element (prefer Payment Element) for card payments; enable Apple Pay/Google Pay where possible.
+- Client secret creation via a serverless function or lightweight server: create PaymentIntent with amount/ currency based on selected dates and pricing rules.
+- Webhooks: handle payment_succeeded, payment_failed, and refund events to update booking status.
+- Refunds: implement admin‑initiated partial and full refunds.
+- Test mode: include STRIPE_PUBLISHABLE_KEY/STRIPE_SECRET_KEY placeholders; document test cards.
+
+Supabase
+- Auth: email/password (optionally magic link later). Profiles table linked to auth user.
+- Database schema (simplified):
+  - properties(id, title, description, location_city, location_country, property_type, base_price, cleaning_fee, tax_rate, max_guests, created_at, updated_at)
+  - property_images(id, property_id FK, url, is_cover, sort_order)
+  - amenities(id, name)
+  - property_amenities(property_id FK, amenity_id FK)
+  - availability_settings(id, property_id FK, date, is_blocked, min_nights, price_override)
+  - bookings(id, property_id FK, user_id FK, start_date, end_date, nights, guests, subtotal, cleaning_fee, taxes, total_amount, currency, status[pending|confirmed|cancelled|refunded], stripe_payment_intent_id, created_at)
+  - profiles(user_id PK/FK, full_name, phone)
+- Storage: bucket "property-images" with RLS to allow admin writes, public reads.
+- RLS: customers can read properties/images/amenities; only admin can write; users can read their own bookings; admin can read all.
+
+Pricing & calculations
+- Total = nightly_price_or_override × nights + cleaning_fee + taxes.
+- Taxes: simple percent on subtotal in MVP.
+- Show clear price breakdown like Airbnb before payment.
+
+API/services
+- Price quote: given property_id, start_date, end_date, guests → return availability validation and price breakdown.
+- Create booking provisional: hold record as pending with client secret from Stripe.
+- Confirm booking on webhook payment_succeeded.
+- Cancel policy: simple free cancellation before a cutoff; otherwise partial fees (MVP can be basic).
+
+Pages/routes
+- / (Home with search/filters)
+- /properties (Listings)
+- /properties/:id (Details + calendar + booking)
+- /booking/:id/confirm (Post‑checkout confirmation)
+- /login, /signup, /profile
+- /admin (dashboard)
+- /admin/properties (CRUD)
+- /admin/properties/:id (edit + images + availability)
+- /admin/bookings
+
+UI/UX
+- Clean, modern layout similar to Airbnb. Responsive.
+- Reusable components: Navbar, Footer, PropertyCard, Calendar, PriceBreakdown, BookingModal, AdminSidebar.
+- Toasts for actions; skeleton loading; error states.
+
+Implementation notes
+- Use React Query or simple hooks for data fetching.
+- Supabase client configured once; include URL/anon key inline for local dev only.
+- Image uploads: pre‑signed upload or direct SDK to Storage; store public URLs in property_images.
+- Calendar: disable blocked dates and existing bookings.
+- Prevent double bookings with RLS or unique constraint on overlapping date ranges per property.
+
+Stripe backend flow (example)
+- Endpoint POST /api/payments/create-intent accepts property_id, start_date, end_date, guests.
+- Calculate price breakdown server‑side; create PaymentIntent; return client_secret.
+- Frontend mounts Payment Element with client_secret; confirm payment; handle redirects.
+- Webhook /api/payments/webhook updates booking status accordingly.
+
+Readiness criteria
+- Can add at least one property via admin, upload images, set availability.
+- Customer can search, pick dates, see price breakdown, pay in Stripe test mode, and get a confirmation.
+- Booked dates are blocked for subsequent searches.
+- Webhook updates booking to confirmed upon successful payment.
+
+Dev instructions for Replit
+- Scaffold React + Vite + TS + Tailwind + shadcn/ui.
+- Add Supabase JS client, configure URL/anon key inline for local only.
+- Add Stripe JS and a minimal Node/Express (or Deno/Edge) server for PaymentIntent + Webhook.
+- Provide seed script to insert sample properties/amenities.
+- Provide example .env for production deployment, but not required for local.
+- Document: how to run, Stripe test cards, Supabase setup steps, and known limitations.
+
+Deliver a running MVP matching the above. Prioritize correctness of availability/pricing, clean UX, and secure Stripe/Supabase usage. This app is strictly like Airbnb lodging bookings, not services or co‑hosting.
