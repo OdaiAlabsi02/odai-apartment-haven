@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MapPin, Users, Bed, Bath, Calendar, ChevronLeft, ChevronRight, Check, Loader2, Star, Wifi, Car, Waves, ChefHat, Shield, Heart, Wind, Coffee, Flame, Home, Dumbbell, Trees, Tv, Laptop, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 import { jordanProperties, JordanProperty } from "@/data/jordanProperties";
 
 export const ApartmentDetailsPage = () => {
   const { id } = useParams();
+  const { user, isAuthenticated } = useAuth();
   const property = jordanProperties.find(prop => prop.id === id);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
+  const [showBookingPanel, setShowBookingPanel] = useState(false);
+  const [hasPaymentMethod, setHasPaymentMethod] = useState(false); // This would come from user profile
 
   // Create multiple images for carousel
   const images = [
@@ -39,6 +43,11 @@ export const ApartmentDetailsPage = () => {
     "Workspace": Laptop,
     "Balcony": Home
   };
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -76,14 +85,32 @@ export const ApartmentDetailsPage = () => {
   };
 
   const handleBookNow = () => {
-    // Navigate to booking page with property details
-    const searchParams = new URLSearchParams({
-      propertyId: property?.id || '',
-      checkIn,
-      checkOut,
-      guests: guests.toString()
-    });
-    window.location.href = `/book/${property?.id}?${searchParams.toString()}`;
+    if (!isAuthenticated) {
+      // Redirect to login page
+      window.location.href = '/login';
+      return;
+    }
+
+    if (!hasPaymentMethod) {
+      // Redirect to profile to add payment method
+      window.location.href = '/profile?tab=payment';
+      return;
+    }
+
+    // Show booking confirmation panel
+    setShowBookingPanel(true);
+  };
+
+  const handleConfirmBooking = () => {
+    // Process the booking
+    alert('Booking confirmed! You will receive a confirmation email shortly.');
+    setShowBookingPanel(false);
+  };
+
+  const calculateTotal = () => {
+    if (!checkIn || !checkOut) return 0;
+    const nights = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24));
+    return (property?.base_price || 0) * nights + 40; // 40 JOD for fees
   };
 
   if (!property) {
@@ -358,7 +385,7 @@ export const ApartmentDetailsPage = () => {
                   onClick={handleBookNow}
                   disabled={!checkIn || !checkOut}
                 >
-                  Book Now
+                  {!isAuthenticated ? 'Login to Book' : !hasPaymentMethod ? 'Add Payment Method' : 'Book Now'}
                 </Button>
 
                 <p className="text-xs text-gray-500 text-center">
@@ -369,6 +396,78 @@ export const ApartmentDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Confirmation Panel */}
+      {showBookingPanel && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Confirm Your Booking</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-semibold">{property.title}</h3>
+                <p className="text-sm text-gray-600">{property.location}</p>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Check-in:</span>
+                  <span>{checkIn}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Check-out:</span>
+                  <span>{checkOut}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Guests:</span>
+                  <span>{guests}</span>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>{property.base_price} JOD × {Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))} nights</span>
+                  <span>{property.base_price * Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))} JOD</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Cleaning fee</span>
+                  <span>25 JOD</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Service fee</span>
+                  <span>15 JOD</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total</span>
+                  <span>{calculateTotal()} JOD</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setShowBookingPanel(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={handleConfirmBooking}
+                >
+                  Confirm Booking
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
