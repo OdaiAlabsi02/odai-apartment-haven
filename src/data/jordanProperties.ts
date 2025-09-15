@@ -305,30 +305,6 @@ export const jordanProperties: JordanProperty[] = [
     location: "Jerash Old Town"
   },
 
-  // Additional properties to reach 60 total
-  ...Array.from({ length: 48 }, (_, i) => ({
-    id: `${i + 13}`,
-    title: `Beautiful Property ${i + 13}`,
-    description: `Stunning accommodation in Jordan with modern amenities and traditional charm.`,
-    city: ["Amman", "Petra", "Wadi Rum", "Aqaba", "Dead Sea", "Jerash"][i % 6],
-    base_price: 50 + (i * 5),
-    property_type: ["Apartment", "Villa", "Desert Camp", "Boutique Hotel", "Guesthouse"][i % 5],
-    property_subtype: ["Modern", "Traditional", "Luxury", "Desert", "Seaside"][i % 5],
-    unit_size: 60 + (i * 10),
-    unit_size_unit: "sqm",
-    building_floors: 2 + (i % 8),
-    listing_floor: 1 + (i % 5),
-    building_age: 1 + (i % 15),
-    featured: i % 10 === 0,
-    image_url: `https://images.unsplash.com/photo-${1560448204 + i}?w=800&h=600&fit=crop`,
-    amenities: ["Wi-Fi", "Air Conditioning", "Kitchen", "Parking", "TV"].slice(0, 3 + (i % 4)),
-    rating: 4.0 + (i % 10) * 0.1,
-    review_count: 5 + (i * 2),
-    guests: 2 + (i % 6),
-    bedrooms: 1 + (i % 4),
-    bathrooms: 1 + (i % 3),
-    location: `${["Amman", "Petra", "Wadi Rum", "Aqaba", "Dead Sea", "Jerash"][i % 6]} Area`
-  }))
 ];
 
 export const popularDestinations = [

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { SearchBox } from "@/components/SearchBox";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyFilters } from "@/components/PropertyFilters";
-import { jordanProperties, JordanProperty } from "@/data/jordanProperties";
+import { jordanProperties, JordanProperty, popularDestinations } from "@/data/jordanProperties";
 import heroImage from "@/assets/hero-apartment.jpg";
 
 interface FilterState {
@@ -34,8 +34,6 @@ export const HomePage = () => {
     amenities: [],
     minRating: 0
   });
-
-  const [showFilters, setShowFilters] = useState(false);
 
   // Filter properties based on search and filter criteria
   const filteredProperties = useMemo(() => {
@@ -95,7 +93,6 @@ export const HomePage = () => {
 
   const handleApplyFilters = () => {
     // Filters are already applied in the useMemo
-    setShowFilters(false);
   };
 
   const handleClearFilters = () => {
@@ -141,46 +138,57 @@ export const HomePage = () => {
               initialCheckIn={searchParams.checkIn}
               initialCheckOut={searchParams.checkOut}
               initialGuests={searchParams.guests}
+              showPopularDestinations={false}
             />
           </div>
         </div>
       </section>
 
-      {/* Main Content */}
+      {/* Popular Destinations Section - Positioned higher */}
+      <section className="bg-gray-50 py-12 -mt-16 relative z-10">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-700 mb-6">Popular destinations:</h3>
+            <div className="flex flex-wrap justify-center gap-3">
+              {popularDestinations.map((destination) => (
+                <button
+                  key={destination.name}
+                  onClick={() => handleSearch({
+                    ...searchParams,
+                    location: destination.name
+                  })}
+                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:scale-105 shadow-sm border"
+                >
+                  {destination.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content with Built-in Sidebar Layout */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Results Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {filteredProperties.length} properties found
-            </h2>
-            <p className="text-gray-600 mt-1">
-              {filters.location ? `in ${filters.location}` : 'in Jordan'}
-            </p>
-          </div>
-          
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </button>
-          </div>
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {filteredProperties.length} properties found
+          </h2>
+          <p className="text-gray-600 mt-1">
+            {filters.location ? `in ${filters.location}` : 'in Jordan'}
+          </p>
         </div>
 
         <div className="flex gap-8">
-          {/* Filters Sidebar */}
-          {showFilters && (
-            <div className="hidden lg:block">
-              <PropertyFilters
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                onApplyFilters={handleApplyFilters}
-                onClearFilters={handleClearFilters}
-              />
-            </div>
-          )}
+          {/* Built-in Filters Sidebar - Always visible on desktop */}
+          <div className="hidden lg:block w-80 flex-shrink-0">
+            <PropertyFilters
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              onApplyFilters={handleApplyFilters}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
 
           {/* Properties Grid */}
           <div className="flex-1">
@@ -211,18 +219,6 @@ export const HomePage = () => {
             )}
           </div>
         </div>
-
-        {/* Mobile Filters */}
-        {showFilters && (
-          <div className="lg:hidden mt-6">
-            <PropertyFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              onApplyFilters={handleApplyFilters}
-              onClearFilters={handleClearFilters}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

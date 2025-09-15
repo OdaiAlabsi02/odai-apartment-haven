@@ -73,13 +73,13 @@ export const PropertyFilters = ({
 
   return (
     <Card className="w-80 h-fit sticky top-4">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <Filter className="h-5 w-5" />
           Filters
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Location */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2">

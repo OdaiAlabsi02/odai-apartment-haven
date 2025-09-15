@@ -146,23 +146,6 @@ export const SearchBox = ({
         </div>
       </Card>
 
-      {/* Popular Destinations */}
-      {showPopularDestinations && (
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-white mb-4">Popular destinations:</h3>
-          <div className="flex flex-wrap justify-center gap-3">
-            {popularDestinations.map((destination) => (
-              <button
-                key={destination.name}
-                onClick={() => handleDestinationClick(destination.name)}
-                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:scale-105"
-              >
-                {destination.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
