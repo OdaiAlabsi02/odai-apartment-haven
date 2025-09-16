@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { jordanProperties, JordanProperty } from "@/data/jordanProperties";
 
 export const ApartmentDetailsPage = () => {
@@ -20,7 +22,10 @@ export const ApartmentDetailsPage = () => {
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
   const [showBookingPanel, setShowBookingPanel] = useState(false);
-  const [hasPaymentMethod, setHasPaymentMethod] = useState(false); // This would come from user profile
+  const [hasPaymentMethod, setHasPaymentMethod] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState<string>("saved");
+  const [selectedSavedPmId, setSelectedSavedPmId] = useState<string>("");
 
   // Create multiple images for carousel
   const images = [
@@ -49,6 +54,24 @@ export const ApartmentDetailsPage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  useEffect(() => {
+    const fetchPms = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('is_default', { ascending: false });
+      if (!error) {
+        setPaymentMethods(data || []);
+        setHasPaymentMethod(!!(data && data.length));
+        const defaultPm = (data || []).find((d:any) => d.is_default) || (data || [])[0];
+        setSelectedSavedPmId(defaultPm?.id || "");
+      }
+    };
+    fetchPms();
+  }, [user?.id]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -92,7 +115,7 @@ export const ApartmentDetailsPage = () => {
       return;
     }
 
-    if (!hasPaymentMethod) {
+    if (!hasPaymentMethod && selectedPaymentOption === 'saved') {
       // Redirect to profile to add payment method
       navigate('/profile?tab=payment');
       return;
@@ -431,6 +454,43 @@ export const ApartmentDetailsPage = () => {
               <Separator />
               
               <div className="space-y-2">
+                {/* Payment selection */}
+                <div className="space-y-2">
+                  <Label>Payment method</Label>
+                  <Select value={selectedPaymentOption} onValueChange={setSelectedPaymentOption}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="saved">Saved card</SelectItem>
+                      <SelectItem value="googlepay">Google Pay</SelectItem>
+                      <SelectItem value="applepay">Apple Pay</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedPaymentOption === 'saved' && (
+                  <div className="space-y-2">
+                    <Label>Choose saved card</Label>
+                    {paymentMethods.length ? (
+                      <Select value={selectedSavedPmId} onValueChange={setSelectedSavedPmId}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentMethods.map((pm:any) => (
+                            <SelectItem key={pm.id} value={pm.id}>
+                              {pm.brand?.toUpperCase?.() || 'CARD'} **** {pm.last4} {pm.is_default ? '(Default)' : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Button variant="outline" onClick={() => navigate('/profile?tab=payment')}>Add Payment Method</Button>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span>{property.base_price} JOD × {Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))} nights</span>
                   <span>{property.base_price * Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))} JOD</span>
