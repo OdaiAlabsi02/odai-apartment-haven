@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,9 +17,29 @@ export default function AdminHostLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const res = mode === 'login' ? await signIn(email, password) : await signUp(email, password);
-    if (res.error) setError(res.error.message || 'Failed');
-    else navigate('/admin/dashboard');
+    try {
+      if (mode === 'login') {
+        const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
+        const hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, is_admin, role')
+          .eq('username', email)
+          .eq('password_hash', hex)
+          .single();
+        if (error || !data || !(data.is_admin || data.role === 'admin')) {
+          setError('Invalid admin credentials');
+          return;
+        }
+        // minimal local session
+        localStorage.setItem('adminAuthenticated', 'true');
+        navigate('/admin/dashboard');
+      } else {
+        setError('Signup disabled. Contact administrator.');
+      }
+    } catch (err:any) {
+      setError(err.message || 'Failed');
+    }
   };
 
   return (
@@ -40,19 +61,7 @@ export default function AdminHostLoginPage() {
             {error && <p className="text-sm text-red-600">{error}</p>}
             <Button type="submit" className="w-full">{mode === 'login' ? 'Login' : 'Create Account'}</Button>
           </form>
-          <Button
-            variant="outline"
-            className="w-full mt-3"
-            onClick={async () => {
-              const res = await signInWithGoogle();
-              if (!res.error) {
-                // Supabase will redirect back; as a fallback navigate here
-                navigate('/admin');
-              }
-            }}
-          >
-            Continue with Google
-          </Button>
+          {/* Google login removed for admin */}
           <button className="text-xs text-muted-foreground mt-3" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
             {mode === 'login' ? 'Need an account? Sign up' : 'Have an account? Log in'}
           </button>
