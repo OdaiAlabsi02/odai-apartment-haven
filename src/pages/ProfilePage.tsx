@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,6 +62,7 @@ interface UserBooking {
 
 export const ProfilePage = () => {
   const { user, signOut } = useAuth();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -86,16 +88,26 @@ export const ProfilePage = () => {
     isDefault: false
   });
   const { getApartmentById } = useApartments();
+  const [activeTab, setActiveTab] = useState<string>(
+    searchParams.get('tab') === 'payment' ? 'payment' : 'profile'
+  );
 
   useEffect(() => {
     if (user) {
       fetchUserProfile();
+      fetchPaymentMethods();
+      fetchUserBookingsFromDb();
     } else {
       // For guests, load their local bookings
       loadGuestBookings();
       setLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
 
   const fetchUserProfile = async () => {
     try {
@@ -253,47 +265,67 @@ export const ProfilePage = () => {
   };
 
   const handleAddPaymentMethod = () => {
-    // In a real app, this would integrate with a payment processor
-    const newMethod = {
-      id: Date.now().toString(),
-      ...newPaymentMethod,
-      last4: newPaymentMethod.cardNumber.slice(-4),
-      type: 'visa' // This would be determined by card number
-    };
-    
-    setPaymentMethods(prev => [...prev, newMethod]);
-    setNewPaymentMethod({
-      cardNumber: '',
-      expiryDate: '',
-      cvv: '',
-      cardholderName: '',
-      isDefault: false
-    });
-    setIsAddingPayment(false);
-    
-    toast({
-      title: "Success",
-      description: "Payment method added successfully"
-    });
+    // Persist to Supabase payment_methods
+    if (!user) return;
+    const digits = newPaymentMethod.cardNumber.replace(/\D/g, '');
+    const last4 = digits.slice(-4);
+    const brand = digits.startsWith('4') ? 'visa' : digits.startsWith('5') ? 'mastercard' : 'card';
+    const [mm, yy] = newPaymentMethod.expiryDate.split('/');
+    supabase
+      .from('payment_methods')
+      .insert({
+        user_id: user.id,
+        brand,
+        last4,
+        exp_month: Number(mm) || 1,
+        exp_year: Number(yy?.length === 2 ? `20${yy}` : yy) || new Date().getFullYear(),
+        is_default: newPaymentMethod.isDefault,
+      })
+      .then(({ error }) => {
+        if (error) {
+          console.error('Add payment error', error);
+          toast({ title: 'Error', description: 'Failed to add payment method', variant: 'destructive' });
+          return;
+        }
+        fetchPaymentMethods();
+        setNewPaymentMethod({ cardNumber: '', expiryDate: '', cvv: '', cardholderName: '', isDefault: false });
+        setIsAddingPayment(false);
+        toast({ title: 'Success', description: 'Payment method added successfully' });
+      });
   };
 
   const handleRemovePaymentMethod = (id: string) => {
-    setPaymentMethods(prev => prev.filter(method => method.id !== id));
-    toast({
-      title: "Success",
-      description: "Payment method removed"
-    });
+    supabase
+      .from('payment_methods')
+      .delete()
+      .eq('id', id)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Remove payment error', error);
+          toast({ title: 'Error', description: 'Failed to remove payment method', variant: 'destructive' });
+          return;
+        }
+        fetchPaymentMethods();
+        toast({ title: 'Success', description: 'Payment method removed' });
+      });
   };
 
   const handleSetDefaultPayment = (id: string) => {
-    setPaymentMethods(prev => prev.map(method => ({
-      ...method,
-      isDefault: method.id === id
-    })));
-    toast({
-      title: "Success",
-      description: "Default payment method updated"
-    });
+    if (!user) return;
+    // The trigger will unset previous defaults
+    supabase
+      .from('payment_methods')
+      .update({ is_default: true })
+      .eq('id', id)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Set default error', error);
+          toast({ title: 'Error', description: 'Failed to set default method', variant: 'destructive' });
+          return;
+        }
+        fetchPaymentMethods();
+        toast({ title: 'Success', description: 'Default payment method updated' });
+      });
   };
 
   const formatDate = (dateString: string) => {
@@ -303,6 +335,52 @@ export const ProfilePage = () => {
       day: 'numeric'
     });
   };
+
+  const fetchPaymentMethods = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('payment_methods')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Fetch payments error', error);
+      return;
+    }
+    setPaymentMethods(
+      (data || []).map(pm => ({
+        id: pm.id,
+        last4: pm.last4,
+        type: pm.brand,
+        isDefault: pm.is_default,
+        expMonth: pm.exp_month,
+        expYear: pm.exp_year,
+      }))
+    );
+  };
+
+  const fetchUserBookingsFromDb = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('check_in_date', { ascending: true });
+    if (error) {
+      console.error('Fetch bookings error', error);
+      return;
+    }
+    setUserBookings((data as any) || []);
+  };
+
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const upcomingBookings = useMemo(() =>
+    userBookings.filter((b: any) => (b.check_out_date || b.check_in_date) >= todayIso),
+  [userBookings, todayIso]);
+  const pastBookings = useMemo(() =>
+    userBookings.filter((b: any) => (b.check_out_date || b.check_in_date) < todayIso),
+  [userBookings, todayIso]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -357,7 +435,7 @@ export const ProfilePage = () => {
 
         {/* User Profile Section */}
         {user && profile && (
-          <Tabs defaultValue="profile" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
@@ -485,13 +563,13 @@ export const ProfilePage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
-                    Your Bookings
+                    Upcoming Bookings
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {userBookings.length > 0 ? (
+                  {upcomingBookings.length > 0 ? (
                     <div className="space-y-4">
-                      {userBookings.map((booking) => (
+                      {upcomingBookings.map((booking: any) => (
                         <div 
                           key={booking.id} 
                           className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
@@ -548,13 +626,80 @@ export const ProfilePage = () => {
                   ) : (
                     <div className="text-center py-8">
                       <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
+                      <h3 className="text-lg font-semibold mb-2">No upcoming bookings</h3>
                       <p className="text-muted-foreground mb-4">
                         Start exploring our properties and make your first booking!
                       </p>
                       <Button onClick={() => window.location.href = '/'}>
                         Browse Properties
                       </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Past bookings */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Past Bookings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {pastBookings.length > 0 ? (
+                    <div className="space-y-4">
+                      {pastBookings.map((booking: any) => (
+                        <div key={booking.id} className="p-4 border rounded-lg">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="font-semibold text-lg">{booking.apartmentTitle || 'Property'}</h4>
+                              {booking.apartmentCity && (
+                                <p className="text-muted-foreground flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  {booking.apartmentCity}
+                                </p>
+                              )}
+                            </div>
+                            <Badge variant="secondary">Completed</Badge>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">Check-in</p>
+                                <p>{formatDate(booking.check_in_date)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">Check-out</p>
+                                <p>{formatDate(booking.check_out_date)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">Guests</p>
+                                <p>{booking.guests}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">Total</p>
+                                <p className="font-semibold">{booking.total_amount} JOD</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No past bookings yet
                     </div>
                   )}
                 </CardContent>
