@@ -1,0 +1,215 @@
+Build a production-grade, full-stack web application named "Odai's Apartments" that replicates the customer-facing UI and behavior currently visible on the customer home and property details pages in this repository. Do not deploy to Vercel. Target a local-first developer experience with proper environment variables, secure keys management, and a complete automated test plan that validates core customer and admin flows end-to-end.
+
+OBJECTIVE
+- Deliver a booking marketplace for apartments in Jordan (Airbnb-like), with two roles: Customer and Admin/Host.
+- Match the current customer UI design and layout (home hero + centered search box; grid of listings; property details with gallery and booking pane). Use the same visual hierarchy, spacing, and typography as the referenced page.
+- Integrate Supabase (Postgres + Auth + Storage) for data, sessions, and file uploads.
+- Integrate Stripe Checkout for one-time per-night bookings (Apple Pay/Google Pay supported by Checkout). No recurring payments.
+- Include an Admin dashboard (Listings, Availability, Amenities, Bookings, Messages, Users, Settings) for managing real data.
+- Include automated, interactive testing that simulates realistic user journeys and validates API contracts.
+
+TECH STACK
+- Frontend: React + TypeScript + React Router + Tailwind CSS (or equivalent utility-first styling) matching the provided UI.
+- Backend: Node.js/Express (or Fastify) for server APIs that are needed beyond Supabase (e.g., Stripe endpoints). Supabase client from the frontend for direct CRUD where appropriate.
+- Database: Supabase (Postgres). Use Row-Level Security (RLS) and policies as specified below.
+- Storage: Supabase Storage for property images (public bucket with server-side policies for writes, client reads).
+- Payments: Stripe Checkout (one-time payments) with a minimal server endpoint to create Checkout Sessions.
+- Testing: Playwright (preferred) or Cypress for E2E, Vitest/Jest for unit/integration tests. Include smoke tests for API health and Stripe webhooks where applicable.
+
+ROLES & AUTH
+- Customers:
+  - Browse active listings.
+  - View details, gallery, amenities, and total price based on dates.
+  - Book via Stripe Checkout; on success, create a booking record.
+- Admin/Hosts:
+  - Authenticate via dedicated admin login (username & password). Do NOT use Google for admin.
+  - Access `/admin` with sidebar: Dashboard, Listings, Availability, Amenities, Bookings, Messages, Users, Settings.
+  - Create/Edit listings; upload images; toggle listing active state; set base price and metadata.
+  - View bookings and update statuses.
+
+GLOBAL LAYOUT REQUIREMENTS
+- Navbar: Logo/name at left, nav links (Home, Contact, Profile) at right; show profile/avatar if authenticated.
+- Footer: Three columns (brand, quick links, support). Include a prominent "Be a Host" link that routes directly to `/host/login` (admin login page), not via customer login.
+- Home page:
+  - Large hero with centered headline and subheadline (Jordan-themed) and the search box (Where, Check-in, Check-out, Guests). Hero height ~75vh.
+  - Below hero: results area (filters sidebar at left on desktop; grid of cards to the right) showing active properties pulled from DB.
+- Property details page:
+  - Image gallery (with arrows and indicators), title, location, rating, amenities, and description.
+  - Right-side booking panel: date pickers, guests, per-night x nights, fees, total, and CTA that redirects to Stripe Checkout.
+
+ADMIN LAYOUT REQUIREMENTS
+- Sidebar with icons & labels: Dashboard, Listings, Availability, Amenities, Bookings, Messages, Users, Settings.
+- Listings page: grid/table of listings, search bar, status badge (Active/Inactive) driven by DB `properties.active`.
+- Listing editor:
+  - Steps: Your Space, Photo Tour, Check-in & Out, Status & Preferences, Ready to Submit.
+  - Photo uploader to Supabase Storage bucket `apartment-images`, track `property_images` rows (is_primary, display_order, image_url).
+  - Submit creates/updates the `properties` row and image rows; activates listing if chosen.
+
+DATABASE SCHEMA
+Use or migrate to the following schema (normalize where possible):
+
+Table public.properties
+- id uuid primary key default gen_random_uuid()
+- title text not null
+- description text
+- city text not null
+- base_price numeric not null
+- active boolean not null default true         -- used for visibility
+- featured boolean default false
+- property_type text
+- property_subtype text
+- listing_type text
+- building_floors int
+- listing_floor int
+- building_age int
+- unit_size numeric
+- unit_size_unit text
+- created_at timestamptz default now()
+- updated_at timestamptz default now()
+
+Table public.property_images
+- id uuid primary key default gen_random_uuid()
+- property_id uuid references public.properties(id) on delete cascade
+- image_url text not null
+- is_primary boolean default false
+- display_order int default 0
+- created_at timestamptz default now()
+
+Table public.amenities
+- id uuid primary key default gen_random_uuid()
+- name text unique not null
+- icon text
+- created_at timestamptz default now()
+
+Table public.property_amenities
+- id uuid primary key default gen_random_uuid()
+- property_id uuid references public.properties(id) on delete cascade
+- amenity_id uuid references public.amenities(id) on delete cascade
+- created_at timestamptz default now()
+
+Table public.bookings
+- id uuid primary key default gen_random_uuid()
+- property_id uuid references public.properties(id) on delete cascade
+- user_id uuid references auth.users(id)
+- check_in_date date not null
+- check_out_date date not null
+- total_price numeric not null
+- status text default 'pending'              -- pending|confirmed|cancelled
+- guest_name text
+- guest_email text
+- guest_phone text
+- special_requests text
+- created_at timestamptz default now()
+- updated_at timestamptz default now()
+- stripe_session_id text                      -- set after Checkout
+
+Table public.users (application table separate from auth.users)
+- id uuid primary key
+- email text unique
+- username text unique                        -- used for admin username login
+- password_hash text                          -- sha256 hex for admin local login
+- first_name text not null default 'Admin'
+- last_name text not null default 'User'
+- phone text
+- is_admin boolean default false
+- role text default 'user'                    -- 'user'|'admin'
+- created_at timestamptz default now()
+- updated_at timestamptz default now()
+
+STORAGE
+- Bucket `apartment-images` (public read). Clients upload via Supabase client when authenticated; URLs stored in `property_images.image_url`.
+
+RLS & SECURITY POLICIES
+- Enable RLS on `properties`, `property_images`, `bookings`.
+- Properties:
+  - SELECT: allow all (public) to read.
+  - INSERT/UPDATE/DELETE: `auth.role() = 'authenticated'` (hosts/admins signed in).
+- Property_images: same as properties.
+- Bookings:
+  - SELECT: allow owner (user_id = auth.uid()) and admins.
+  - INSERT: allow authenticated users to create.
+  - UPDATE: allow admins; owner can cancel own bookings.
+- Users (app table): admins only for writes; allow self to read minimal profile.
+
+APIs (Node/Express)
+1) POST /api/create-checkout-session
+   - body: { propertyId, nights, unitAmount, currency, userId, successUrl, cancelUrl }
+   - server: creates Stripe Checkout Session (mode=payment), line item = unitAmount * nights, metadata includes propertyId, userId.
+   - returns: { id, url }
+
+2) POST /api/stripe/webhook
+   - verifies signature with STRIPE_WEBHOOK_SECRET.
+   - on checkout.session.completed: mark booking confirmed; store stripe_session_id; upsert booking if not pre-created.
+
+3) GET /api/health
+   - returns ok for CI smoke test.
+
+CLIENT DATA BINDING RULES
+- Customer listing feed: query `properties where active = true order by created_at desc` and join primary image via `property_images` (is_primary desc, display_order).
+- Property details: `properties by id`, fetch ordered images, fetch amenities via `property_amenities join amenities`.
+- Admin listings: read/write `properties.active` as the status badge source of truth.
+- Image uploader: uploads to `apartment-images`, then inserts into `property_images` with `is_primary/display_order`.
+
+STRIPE INTEGRATION
+- Use environment variables (never commit keys):
+  - STRIPE_SECRET_KEY
+  - STRIPE_PUBLISHABLE_KEY
+  - STRIPE_WEBHOOK_SECRET
+- Create Checkout Session per booking attempt. Use Jordanian currency if supported (JOD). If not, test in USD but show UI prices in JOD with a mapping note for test.
+- success_url: http://localhost:5173/booking-confirmation?session_id={CHECKOUT_SESSION_ID}
+- cancel_url:  http://localhost:5173/apartment/:id
+- On success page, retrieve session (server or client via server proxy) and create/confirm the booking in DB.
+
+ENV & CONFIG (no deployment)
+- .env (server): STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_ROLE_KEY (server-only), SUPABASE_URL
+- .env (client): VITE_STRIPE_PUBLISHABLE_KEY, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+- Provide local scripts: `npm run dev` (client), `npm run server` (api), `npm run db:types` (optional codegen), `npm run test`.
+
+INTERACTIVE TEST PLAN (E2E)
+Use Playwright to automate the following journeys. Seed the DB with 2 active properties and images.
+
+Customer flows
+1. Home loads, listings grid shows only active properties from DB.
+2. Search by city; grid filters accordingly.
+3. Open property details, gallery arrows work, amenities visible.
+4. Choose dates/guests; total reflects nights x base price + fees; click Book.
+5. Redirect to Stripe Checkout; simulate successful test card; return to success page.
+6. Booking record appears in DB; status = confirmed; success page shows summary.
+
+Admin flows
+1. Visit /host/login; login with username/password (admin)
+2. Hit /admin/dashboard via redirect; sidebar links visible.
+3. Create new listing (title, city, base_price); upload 3 images; set primary; activate.
+4. Listing appears on admin listings with Active badge; appears on customer home grid.
+5. Edit listing (price, description); change active=false; verify it disappears from customer grid.
+6. Open bookings page; verify booking created in the customer test.
+
+API CONTRACT TESTS
+- /api/health returns 200.
+- /api/create-checkout-session with valid payload returns 200 + url.
+- Webhook handler processes `checkout.session.completed` and updates booking.
+
+ERROR & EDGE CASES
+- Handle Supabase errors with user-friendly toasts; log detailed errors in console.
+- Prevent submission without required fields (title, city, base_price, at least one image for activation).
+- If image upload fails, allow re-try; do not orphan partial DB rows.
+
+SECURITY
+- Do NOT commit any keys. Always read from environment variables.
+- Apply RLS as defined; never use service role from the client.
+- Sanitize any user-supplied text fields, limit file types for uploads (jpeg/png/webp), limit max image size.
+
+DELIVERABLES
+- Complete full-stack project with:
+  - Client (React+TS) with the exact customer UI described.
+  - API server with Stripe endpoints.
+  - Database migration scripts for the schema above and RLS policies.
+  - Supabase Storage bucket setup docs.
+  - Tests: E2E (Playwright), unit/integration for core utilities and API routes.
+  - README explaining local setup, .env variables, running dev server, running tests.
+
+SUCCESS CRITERIA
+- All E2E tests pass locally.
+- Creating a new listing as admin makes it appear for customers when active.
+- A complete booking via Stripe creates a confirmed booking row and returns the user to the booking confirmation page with their details.
+

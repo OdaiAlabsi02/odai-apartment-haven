@@ -291,42 +291,30 @@ export default function AddListingStep5Page() {
         return;
       }
       
-      // Convert to format expected by properties table
+      // Convert to format expected by properties table (only existing columns)
       const propertyData = {
-        title: processedData.title,
+        title: processedData.title || step1Data.name,
         description: processedData.description,
-        property_type: processedData.property_type,
-        room_type: processedData.room_type,
-        max_guests: processedData.max_guests,
-        bedrooms: processedData.bedrooms,
-        bathrooms: processedData.bathrooms,
-        beds: processedData.beds,
-        base_price: processedData.base_price,
-        currency: processedData.currency,
-        host_id: user.id,
-        // Location details
-        address_line1: processedData.address_line1,
-        address_line2: processedData.address_line2,
-        city: processedData.city,
-        state: processedData.state,
-        country: processedData.country,
-        postal_code: processedData.postal_code,
-        latitude: processedData.latitude,
-        longitude: processedData.longitude,
-        // Additional details
-        square_feet: processedData.square_feet,
-        minimum_stay: processedData.minimum_stay,
-        maximum_stay: processedData.maximum_stay,
-        check_in_time: processedData.check_in_time,
-        check_out_time: processedData.check_out_time,
-        is_instant_book: processedData.is_instant_book,
-        is_active: processedData.is_active,
-      };
+        city: processedData.city || step2Data.city || 'Amman',
+        base_price: Number(processedData.base_price || step1Data.price_per_night || 0),
+        property_type: formData.property_type || processedData.property_type,
+        property_subtype: formData.property_subtype || null,
+        listing_type: formData.listing_type || null,
+        building_floors: Number(formData.building_floors || 1),
+        listing_floor: Number(formData.listing_floor || 1),
+        building_age: formData.building_age ? Number(formData.building_age) : null,
+        unit_size: formData.unit_size ? Number(formData.unit_size) : null,
+        unit_size_unit: formData.unit_size_unit || null,
+        active: true,
+      } as any;
 
       console.log("Submitting property data:", propertyData);
 
-      // Validate data lengths before submission
+      // Validate data lengths before submission & required fields
       const validationErrors = [];
+      if (!propertyData.title) validationErrors.push('Title is required');
+      if (!propertyData.city) validationErrors.push('City is required');
+      if (!propertyData.base_price || isNaN(propertyData.base_price)) validationErrors.push('Base price is required');
       
       if (propertyData.title && propertyData.title.length > 1000) {
         validationErrors.push("Property title is too long (max 1000 characters)");
@@ -505,37 +493,22 @@ export default function AddListingStep5Page() {
         return;
       }
       
-      // Convert to format expected by properties table with draft flag
+      // Convert to format expected by properties table with draft flag (only existing columns)
       const propertyData = {
-        title: processedData.title,
+        title: processedData.title || step1Data.name,
         description: processedData.description,
-        property_type: processedData.property_type,
-        room_type: processedData.room_type,
-        max_guests: processedData.max_guests,
-        bedrooms: processedData.bedrooms,
-        bathrooms: processedData.bathrooms,
-        beds: processedData.beds,
-        base_price: processedData.base_price,
-        currency: processedData.currency,
-        host_id: user.id,
-        // Location details
-        address_line1: processedData.address_line1,
-        address_line2: processedData.address_line2,
-        city: processedData.city,
-        state: processedData.state,
-        country: processedData.country,
-        postal_code: processedData.postal_code,
-        latitude: processedData.latitude,
-        longitude: processedData.longitude,
-        // Additional details
-        square_feet: processedData.square_feet,
-        minimum_stay: processedData.minimum_stay,
-        maximum_stay: processedData.maximum_stay,
-        check_in_time: processedData.check_in_time,
-        check_out_time: processedData.check_out_time,
-        is_instant_book: processedData.is_instant_book,
-        is_active: false, // Draft properties are not active
-      };
+        city: processedData.city || step2Data.city || 'Amman',
+        base_price: Number(processedData.base_price || step1Data.price_per_night || 0),
+        property_type: formData.property_type || processedData.property_type,
+        property_subtype: formData.property_subtype || null,
+        listing_type: formData.listing_type || null,
+        building_floors: Number(formData.building_floors || 1),
+        listing_floor: Number(formData.listing_floor || 1),
+        building_age: formData.building_age ? Number(formData.building_age) : null,
+        unit_size: formData.unit_size ? Number(formData.unit_size) : null,
+        unit_size_unit: formData.unit_size_unit || null,
+        active: false,
+      } as any;
 
       console.log("Saving property as draft:", propertyData);
 
@@ -1303,9 +1276,9 @@ export default function AddListingStep5Page() {
         {/* Submit Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Ready to Submit</CardTitle>
+            <CardTitle>Ready to Start Listing</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Your listing is ready to be published. Click submit to create your apartment listing.
+              Your listing is ready. Click Start Listing to create it immediately.
             </p>
           </CardHeader>
           <CardContent>
@@ -1339,7 +1312,7 @@ export default function AddListingStep5Page() {
                   className="w-full"
                   size="lg"
                 >
-                  {isSubmitting ? "Creating Listing..." : "Submit Listing"}
+                  {isSubmitting ? "Creating Listing..." : "Start Listing"}
                 </Button>
                 
                 <Button 
