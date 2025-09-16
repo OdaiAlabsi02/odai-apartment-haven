@@ -156,7 +156,7 @@ export const ApartmentDetailsPage = () => {
           propertyId: property?.id,
           propertyTitle: property?.title,
           customerId: (user as any)?.stripe_customer_id || undefined,
-          successUrl: `${window.location.origin}/booking-confirmation`,
+          successUrl: `${window.location.origin}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/apartment/${property?.id}`,
           metadata: {
             selectedPaymentOption,
