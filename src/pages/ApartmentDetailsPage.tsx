@@ -126,15 +126,53 @@ export const ApartmentDetailsPage = () => {
   };
 
   const handleConfirmBooking = () => {
-    // Process the booking
-    alert('Booking confirmed! You will receive a confirmation email shortly.');
-    setShowBookingPanel(false);
+    // If using Stripe Checkout (Apple/Google Pay or generic card checkout)
+    createCheckoutSession();
   };
 
   const calculateTotal = () => {
     if (!checkIn || !checkOut) return 0;
     const nights = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24));
     return (property?.base_price || 0) * nights + 40; // 40 JOD for fees
+  };
+
+  const getNights = () => {
+    if (!checkIn || !checkOut) return 1;
+    const n = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(1, n);
+  };
+
+  const API_BASE = (import.meta as any)?.env?.VITE_API_BASE || 'http://localhost:3001';
+
+  const createCheckoutSession = async () => {
+    try {
+      const nights = getNights();
+      const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          unitAmountJod: property?.base_price,
+          nights,
+          propertyId: property?.id,
+          propertyTitle: property?.title,
+          customerId: (user as any)?.stripe_customer_id || undefined,
+          successUrl: `${window.location.origin}/booking-confirmation`,
+          cancelUrl: `${window.location.origin}/apartment/${property?.id}`,
+          metadata: {
+            selectedPaymentOption,
+            selectedSavedPmId,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to start checkout');
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Checkout error', err);
+      alert('Could not start payment. Please try again.');
+    }
   };
 
   if (!property) {

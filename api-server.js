@@ -11,6 +11,49 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Create Stripe Checkout Session endpoint (one-time, per-night)
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const { unitAmountJod, nights, propertyId, propertyTitle, successUrl, cancelUrl, customerId } = req.body;
+    if (!unitAmountJod || !nights) {
+      return res.status(400).json({ error: 'unitAmountJod and nights are required' });
+    }
+
+    const totalPerNight = Math.round(Number(unitAmountJod) * 100);
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer: customerId || undefined,
+      line_items: [
+        {
+          price_data: {
+            currency: 'jod',
+            product_data: {
+              name: propertyTitle || 'Apartment booking',
+              metadata: { propertyId: String(propertyId || '') },
+            },
+            unit_amount: totalPerNight,
+          },
+          quantity: Number(nights),
+        },
+      ],
+      allow_promotion_codes: false,
+      automatic_tax: { enabled: false },
+      metadata: {
+        propertyId: String(propertyId || ''),
+        nights: String(nights),
+      },
+      success_url: successUrl || 'http://localhost:5173/booking-confirmation?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: cancelUrl || 'http://localhost:5173/apartment/' + String(propertyId || ''),
+    });
+
+    res.json({ id: session.id, url: session.url });
+  } catch (err) {
+    console.error('Create checkout session error', err);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
 // Create Payment Intent endpoint
 app.post('/api/create-payment-intent', async (req, res) => {
   try {
