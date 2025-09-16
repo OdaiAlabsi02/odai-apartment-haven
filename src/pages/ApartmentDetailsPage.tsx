@@ -142,12 +142,12 @@ export const ApartmentDetailsPage = () => {
     return Math.max(1, n);
   };
 
-  const API_BASE = (import.meta as any)?.env?.VITE_API_BASE || 'http://localhost:3001';
+  const API_BASE = '/api';
 
   const createCheckoutSession = async () => {
     try {
       const nights = getNights();
-      const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
+      const res = await fetch(`${API_BASE}/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
