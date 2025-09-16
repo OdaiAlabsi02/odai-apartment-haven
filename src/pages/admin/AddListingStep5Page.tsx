@@ -344,8 +344,17 @@ export default function AddListingStep5Page() {
         return;
       }
 
-      // Submit the property data
-      const result = await addApartment(propertyData);
+      // Submit via admin API (service role)
+      const resp = await fetch('/api/admin/properties', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ property: propertyData, images: uploadedImages })
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to create listing');
+      }
+      const { property: result } = await resp.json();
       
       if (result) {
         // Handle amenities separately
@@ -543,8 +552,17 @@ export default function AddListingStep5Page() {
         return;
       }
 
-      // Save the property as draft
-      const result = await addApartment(propertyData);
+      // Save as draft via admin API (active=false)
+      const resp = await fetch('/api/admin/properties', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ property: propertyData, images: uploadedImages })
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to save draft');
+      }
+      const { property: result } = await resp.json();
       
       if (result) {
         // Handle amenities separately
