@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import AdminHostLoginPage from "./pages/AdminHostLoginPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import ListingsPage from "./pages/admin/ListingsPage";
 import BookingsPage from "./pages/admin/BookingsPage";
@@ -48,6 +49,7 @@ function AppWithRouterLogic() {
           <Route path="/book/:id" element={<BookingPage />} />
           <Route path="/booking-confirmation" element={<BookingConfirmationPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/host/login" element={<AdminHostLoginPage />} />
           <Route path="/auth/callback" element={<div>Processing authentication...</div>} />
           <Route path="/admin" element={<AdminPage />}>
             <Route index element={<DashboardPage />} />
