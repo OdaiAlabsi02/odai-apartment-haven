@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminHostLoginPage() {
   const { signIn, signUp, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -16,6 +18,7 @@ export default function AdminHostLoginPage() {
     setError(null);
     const res = mode === 'login' ? await signIn(email, password) : await signUp(email, password);
     if (res.error) setError(res.error.message || 'Failed');
+    else navigate('/admin/dashboard');
   };
 
   return (
@@ -37,7 +40,19 @@ export default function AdminHostLoginPage() {
             {error && <p className="text-sm text-red-600">{error}</p>}
             <Button type="submit" className="w-full">{mode === 'login' ? 'Login' : 'Create Account'}</Button>
           </form>
-          <Button variant="outline" className="w-full mt-3" onClick={() => signInWithGoogle()}>Continue with Google</Button>
+          <Button
+            variant="outline"
+            className="w-full mt-3"
+            onClick={async () => {
+              const res = await signInWithGoogle();
+              if (!res.error) {
+                // Supabase will redirect back; as a fallback navigate here
+                navigate('/admin');
+              }
+            }}
+          >
+            Continue with Google
+          </Button>
           <button className="text-xs text-muted-foreground mt-3" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
             {mode === 'login' ? 'Need an account? Sign up' : 'Have an account? Log in'}
           </button>

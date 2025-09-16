@@ -9,12 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { mockBookings, Booking } from "@/data/bookings";
 import { AdminSidebar } from "@/components/AdminSidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { FcGoogle } from "react-icons/fc";
 
 export const AdminPage = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -157,6 +158,10 @@ export const AdminPage = () => {
           if (user.is_admin === true || user.role === "admin") {
             setIsAuthenticated(true);
             localStorage.setItem("adminAuthenticated", "true");
+            // Ensure we are in the admin area
+            if (location.pathname === '/admin') {
+              navigate('/admin/dashboard', { replace: true });
+            }
             toast({
               title: "Access Granted",
               description: "Welcome back to the admin dashboard!",
