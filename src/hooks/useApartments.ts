@@ -79,6 +79,7 @@ export function useApartments() {
           supabase
             .from('properties')
             .select('*')
+            .eq('active', true)
             .order('created_at', { ascending: false }) as any
         ) as unknown as Promise<{ data: any[]; error: any }>);
 
