@@ -523,24 +523,42 @@ export default function YourSpaceSection({ listing, onUpdate }: YourSpaceSection
         </CardContent>
       </Card>
 
-      {/* Description */}
+      {/* Title & Description */}
       <Card>
         <CardHeader>
-          <CardTitle>Description</CardTitle>
+          <CardTitle>Property Title & Description</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Write a compelling description of your space. Highlight what makes it unique!
+            Create an appealing title and description for your listing
           </p>
         </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="Describe your space, its unique features, and what guests can expect..."
-            value={listing.description || ""}
-            onChange={(e) => onUpdate({ description: e.target.value })}
-            className="min-h-[120px]"
-          />
-          <p className="text-xs text-muted-foreground mt-2">
-            {listing.description?.length || 0} characters
-          </p>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="title">Property Title</Label>
+            <Input
+              id="title"
+              placeholder="e.g., Cozy Downtown Apartment with City View"
+              value={listing.title || ""}
+              onChange={(e) => onUpdate({ title: e.target.value })}
+              className="mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {listing.title?.length || 0}/60 characters (recommended)
+            </p>
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Describe your space, its unique features, and what guests can expect..."
+              value={listing.description || ""}
+              onChange={(e) => onUpdate({ description: e.target.value })}
+              className="min-h-[120px] mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {listing.description?.length || 0} characters
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

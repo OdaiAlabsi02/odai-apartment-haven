@@ -94,6 +94,7 @@ export default function ListingsPage() {
     listing.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+
   const handleDeleteListing = async (id: string) => {
     try {
       const { error } = await supabase.from("properties").delete().eq("id", id);
@@ -254,29 +255,16 @@ export default function ListingsPage() {
               {filteredListings.map((listing) => (
                 <Card 
                   key={listing.id} 
-                  className={`group overflow-hidden border-0 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 cursor-pointer ${listing.is_active ? "" : "opacity-60"}`}
+                  className={"group overflow-hidden border-0 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 cursor-pointer"}
                   onClick={() => navigate(`/admin/listing-editor/${listing.id}`)}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img
                       src={images[listing.id]?.image_url || '/placeholder.svg'}
                       alt={listing.title}
-                      className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${listing.is_active ? "" : "grayscale"}`}
+                      className={"w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"}
                     />
-                    {/* Status Badge */}
-                    <div className="absolute top-3 left-3">
-                      {!listing.is_active ? (
-                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full mr-1"></div>
-                          Inactive
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                          Active
-                        </Badge>
-                      )}
-                    </div>
+                    {/* Removed status badges */}
                     {/* Price Badge */}
                     <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg">
                       <span className="text-sm font-semibold">${listing.base_price}/night</span>
@@ -285,13 +273,12 @@ export default function ListingsPage() {
 
                   <CardContent className="p-4 space-y-3">
                     <div>
-                      <h3 className={`font-semibold text-lg leading-tight ${listing.is_active ? "" : "text-muted-foreground"}`}>
+                      <h3 className={`font-semibold text-lg leading-tight`}>
                         {listing.title}
-                        {!listing.is_active && " (Inactive)"}
                       </h3>
                       <div className="flex items-center text-muted-foreground text-sm mt-1">
                         <MapPin className="h-3 w-3 mr-1" />
-                        {listing.city}, {listing.state}
+                        {(listing.city || '').trim() || 'No location'}
                       </div>
                     </div>
 
@@ -314,58 +301,33 @@ export default function ListingsPage() {
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-2 pt-2">
-                      {!listing.is_active ? (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-primary hover:text-primary flex-1"
-                            title="Activate Listing"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Activate
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteListing(listing.id)}
-                            className="text-destructive hover:text-destructive"
-                            title="Delete Listing"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleFeatured(listing.id)}
-                            className={`text-accent hover:text-accent flex-1 ${listing.featured ? 'bg-accent/10' : ''}`}
-                            title="Toggle Featured"
-                          >
-                            <Star className={`h-4 w-4 mr-1 ${listing.featured ? 'fill-current' : ''}`} />
-                            {listing.featured ? 'Featured' : 'Feature'}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-primary hover:text-primary"
-                            title="Edit Listing"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteListing(listing.id)}
-                            className="text-destructive hover:text-destructive"
-                            title="Delete Listing"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleFeatured(listing.id)}
+                        className={`text-accent hover:text-accent flex-1 ${listing.featured ? 'bg-accent/10' : ''}`}
+                        title="Toggle Featured"
+                      >
+                        <Star className={`h-4 w-4 mr-1 ${listing.featured ? 'fill-current' : ''}`} />
+                        {listing.featured ? 'Featured' : 'Feature'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary hover:text-primary"
+                        title="Edit Listing"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteListing(listing.id)}
+                        className="text-destructive hover:text-destructive"
+                        title="Delete Listing"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -381,13 +343,12 @@ export default function ListingsPage() {
                     <th className="text-left py-3 px-4 font-medium">Location</th>
                     <th className="text-left py-3 px-4 font-medium">Price</th>
                     <th className="text-left py-3 px-4 font-medium">Details</th>
-                    <th className="text-left py-3 px-4 font-medium">Status</th>
                     <th className="text-left py-3 px-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredListings.map((listing) => (
-                    <tr key={listing.id} className={`border-b ${listing.is_active ? "" : "opacity-60 bg-muted/30"}`}>
+                    <tr key={listing.id} className={`border-b`}>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <img
@@ -407,19 +368,19 @@ export default function ListingsPage() {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className={`flex items-center text-sm ${listing.is_active ? "" : "text-muted-foreground"}`}>
+                        <div className={`flex items-center text-sm`}>
                           <MapPin className="h-3 w-3 mr-1" />
                           {listing.city}, {listing.state}
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className={`flex items-center font-medium ${listing.is_active ? "" : "text-muted-foreground"}`}>
+                        <div className={`flex items-center font-medium`}>
                           <DollarSign className="h-4 w-4" />
                           ${listing.base_price}/night
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className={`flex items-center gap-4 text-sm ${listing.is_active ? "" : "text-muted-foreground"}`}>
+                        <div className={`flex items-center gap-4 text-sm`}>
                           <div className="flex items-center">
                             <Users className="h-3 w-3 mr-1" />
                             {listing.max_guests} guests
@@ -432,29 +393,6 @@ export default function ListingsPage() {
                             <Bath className="h-3 w-3 mr-1" />
                             {listing.bathrooms}
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          {!listing.is_active ? (
-                            <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                              <div className="w-2 h-2 bg-orange-500 rounded-full mr-1"></div>
-                              Inactive
-                            </Badge>
-                          ) : (
-                            <>
-                              {listing.featured && (
-                                <Badge variant="secondary" className="bg-accent text-accent-foreground">
-                                  <Star className="h-3 w-3 mr-1" />
-                                  Featured
-                                </Badge>
-                              )}
-                              <Badge variant="outline" className="text-success border-success">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                                Active
-                              </Badge>
-                            </>
-                          )}
                         </div>
                       </td>
                       <td className="py-3 px-4">

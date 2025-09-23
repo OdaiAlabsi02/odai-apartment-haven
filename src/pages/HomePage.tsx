@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchBox } from "@/components/SearchBox";
-import { PropertyCard } from "@/components/PropertyCard";
+import { ApartmentCard } from "@/components/ApartmentCard";
 import { PropertyFilters } from "@/components/PropertyFilters";
-import { jordanProperties, JordanProperty } from "@/data/jordanProperties";
+import { useApartments } from "@/hooks/useApartments";
 import heroImage from "@/assets/hero-apartment.jpg";
 
 interface FilterState {
@@ -19,6 +19,7 @@ interface FilterState {
 
 export const HomePage = () => {
   const navigate = useNavigate();
+  const { apartments, loading } = useApartments();
   const [searchParams, setSearchParams] = useState({
     location: '',
     checkIn: '',
@@ -39,7 +40,7 @@ export const HomePage = () => {
 
   // Filter properties based on search and filter criteria
   const filteredProperties = useMemo(() => {
-    return jordanProperties.filter(property => {
+    return apartments.filter((property: any) => {
       // Location filter
       if (filters.location && !property.city.toLowerCase().includes(filters.location.toLowerCase()) && 
           !property.location.toLowerCase().includes(filters.location.toLowerCase())) {
@@ -47,7 +48,7 @@ export const HomePage = () => {
       }
 
       // Price range filter
-      if (property.base_price < filters.priceRange[0] || property.base_price > filters.priceRange[1]) {
+      if ((property.base_price || property.price_per_night || 0) < filters.priceRange[0] || (property.base_price || property.price_per_night || 0) > filters.priceRange[1]) {
         return false;
       }
 
@@ -58,25 +59,24 @@ export const HomePage = () => {
 
       // Amenities filter
       if (filters.amenities.length > 0) {
-        const hasAllAmenities = filters.amenities.every(amenity => 
-          property.amenities.includes(amenity)
-        );
+        const amenities: string[] = property.amenities || [];
+        const hasAllAmenities = filters.amenities.every((amenity) => amenities.includes(amenity));
         if (!hasAllAmenities) return false;
       }
 
       // Rating filter
-      if (filters.minRating > 0 && property.rating < filters.minRating) {
+      if (filters.minRating > 0 && (property.rating || 0) < filters.minRating) {
         return false;
       }
 
       // Guests filter
-      if (parseInt(filters.guests) > property.guests) {
+      if (parseInt(filters.guests) > (property.max_guests || property.guests || 1)) {
         return false;
       }
 
       return true;
     });
-  }, [filters]);
+  }, [filters, apartments]);
 
   const handleSearch = (searchData: typeof searchParams) => {
     setSearchParams(searchData);
@@ -185,15 +185,13 @@ export const HomePage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                {filteredProperties.map((property) => (
-                  <PropertyCard
-                    key={property.id}
-                    property={property}
-                    onClick={() => {
-                      navigate(`/apartment/${property.id}`);
-                    }}
-                  />
-                ))}
+                {loading ? (
+                  <div className="text-center text-muted-foreground">Loading properties...</div>
+                ) : (
+                  filteredProperties.map((apartment: any) => (
+                    <ApartmentCard key={apartment.id} apartment={apartment} />
+                  ))
+                )}
               </div>
             )}
           </div>

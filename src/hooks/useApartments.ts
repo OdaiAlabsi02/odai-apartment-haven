@@ -79,7 +79,6 @@ export function useApartments() {
           supabase
             .from('properties')
             .select('*')
-            .eq('active', true)
             .order('created_at', { ascending: false }) as any
         ) as unknown as Promise<{ data: any[]; error: any }>);
 
@@ -188,6 +187,7 @@ export function useApartments() {
                 title: property.title || property.name,
                 city: property.city || property.location,
                 base_price: property.base_price || property.price_per_night,
+                is_active: (property as any).is_active ?? (property as any).active ?? true,
                 // Property type fields
                 property_type: property.property_type,
                 property_subtype: property.property_subtype,

@@ -8,15 +8,14 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabaseClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { jordanProperties, JordanProperty } from "@/data/jordanProperties";
+import { supabase } from "@/lib/supabaseClient";
 
 export const ApartmentDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const property = jordanProperties.find(prop => prop.id === id);
+  const [property, setProperty] = useState<any | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -27,12 +26,49 @@ export const ApartmentDetailsPage = () => {
   const [selectedPaymentOption, setSelectedPaymentOption] = useState<string>("saved");
   const [selectedSavedPmId, setSelectedSavedPmId] = useState<string>("");
 
-  // Create multiple images for carousel
-  const images = [
-    property?.image_url || "",
-    property?.image_url || "", // You can add more images here
-    property?.image_url || ""
-  ];
+  useEffect(() => {
+    const fetchOne = async () => {
+      if (!id) return;
+      // fetch property
+      const { data: prop, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error || !prop) {
+        navigate('/');
+        return;
+      }
+      // fetch images
+      const { data: images } = await supabase
+        .from('property_images')
+        .select('*')
+        .eq('property_id', id)
+        .order('display_order', { ascending: true });
+      const primary = images?.find(i => i.is_primary)?.image_url || images?.[0]?.image_url || null;
+      const rest = (images || []).filter(i => !i.is_primary).map(i => i.image_url);
+      // fetch location
+      const { data: location } = await supabase
+        .from('property_locations')
+        .select('*')
+        .eq('property_id', id)
+        .single();
+
+      setProperty({
+        ...prop,
+        title: prop.title || prop.name,
+        city: prop.city || prop.location,
+        base_price: prop.base_price || prop.price_per_night,
+        primary_image: primary,
+        image_urls: rest,
+        image_count: images?.length || 0,
+        location
+      });
+    };
+    fetchOne();
+  }, [id, navigate]);
+
+  const images = property ? [property.primary_image, ...(property.image_urls || [])].filter(Boolean) as string[] : [];
 
   const amenityIcons: { [key: string]: any } = {
     "Wi-Fi": Wifi,
@@ -263,7 +299,7 @@ export const ApartmentDetailsPage = () => {
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
                     <div className="flex items-center text-gray-600 mb-4">
                       <MapPin className="h-4 w-4 mr-1" />
-                      <span>{property.location}</span>
+                      <span>{property.location?.formatted_address || property.city || 'Location not available'}</span>
                     </div>
                     <div className="flex items-center mb-4">
                       {renderStars(property.rating)}
@@ -280,15 +316,15 @@ export const ApartmentDetailsPage = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="flex items-center">
                     <Users className="h-5 w-5 mr-2 text-gray-600" />
-                    <span className="text-sm">{property.guests} guests</span>
+                    <span className="text-sm">{property.max_guests || property.guests || 1} guests</span>
                   </div>
                   <div className="flex items-center">
                     <Bed className="h-5 w-5 mr-2 text-gray-600" />
-                    <span className="text-sm">{property.bedrooms} bedrooms</span>
+                    <span className="text-sm">{property.bedrooms || 1} bedrooms</span>
                   </div>
                   <div className="flex items-center">
                     <Bath className="h-5 w-5 mr-2 text-gray-600" />
-                    <span className="text-sm">{property.bathrooms} bathrooms</span>
+                    <span className="text-sm">{property.bathrooms || 1} bathrooms</span>
                   </div>
                   <div className="flex items-center">
                     <Home className="h-5 w-5 mr-2 text-gray-600" />
@@ -312,7 +348,7 @@ export const ApartmentDetailsPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {property.amenities.map((amenity) => {
+                  {(property?.amenities ?? []).map((amenity: string) => {
                     const IconComponent = amenityIcons[amenity] || Home;
                     return (
                       <div key={amenity} className="flex items-center">
@@ -369,8 +405,12 @@ export const ApartmentDetailsPage = () => {
                 <div className="h-64 bg-gray-200 rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                    <p className="text-gray-600">Google Maps integration would go here</p>
-                    <p className="text-sm text-gray-500 mt-1">{property.location}</p>
+                    {property.location?.map_url ? (
+                      <a href={property.location.map_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Open in Google Maps</a>
+                    ) : (
+                      <p className="text-gray-600">Google Maps integration would go here</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-1">{property.location?.formatted_address || property.city || property.location}</p>
                   </div>
                 </div>
               </CardContent>
@@ -413,7 +453,7 @@ export const ApartmentDetailsPage = () => {
                     id="guests"
                     type="number"
                     min="1"
-                    max={property.guests}
+                    max={property.max_guests || property.guests || 1}
                     value={guests}
                     onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
                   />
@@ -469,7 +509,7 @@ export const ApartmentDetailsPage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <h3 className="font-semibold">{property.title}</h3>
-                <p className="text-sm text-gray-600">{property.location}</p>
+                <p className="text-sm text-gray-600">{property.location?.formatted_address || property.city || 'Location not available'}</p>
               </div>
               
               <Separator />

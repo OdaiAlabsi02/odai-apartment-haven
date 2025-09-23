@@ -15,7 +15,7 @@ export const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={apartment.primary_image || apartment.image_urls?.[0] || '/placeholder.svg'}
-          alt={apartment.name}
+          alt={apartment.title || apartment.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         {apartment.featured && (
@@ -24,16 +24,16 @@ export const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
           </Badge>
         )}
         <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-lg">
-          <span className="text-sm font-semibold">${apartment.price_per_night}/night</span>
+          <span className="text-sm font-semibold">${apartment.base_price || apartment.price_per_night}/night</span>
         </div>
       </div>
 
       <CardContent className="p-4 space-y-3">
         <div>
-          <h3 className="font-semibold text-lg leading-tight">{apartment.name}</h3>
+          <h3 className="font-semibold text-lg leading-tight">{apartment.title || apartment.name}</h3>
           <div className="flex items-center text-muted-foreground text-sm mt-1">
             <MapPin className="h-3 w-3 mr-1" />
-            {apartment.location}
+            {apartment.city || apartment.location}
           </div>
         </div>
 

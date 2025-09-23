@@ -36,6 +36,7 @@ GLOBAL LAYOUT REQUIREMENTS
 - Property details page:
   - Image gallery (with arrows and indicators), title, location, rating, amenities, and description.
   - Right-side booking panel: date pickers, guests, per-night x nights, fees, total, and CTA that redirects to Stripe Checkout.
+  - Embedded map showing the property's location (Google Maps) with a marker.
 
 ADMIN LAYOUT REQUIREMENTS
 - Sidebar with icons & labels: Dashboard, Listings, Availability, Amenities, Bookings, Messages, Users, Settings.
@@ -44,6 +45,7 @@ ADMIN LAYOUT REQUIREMENTS
   - Steps: Your Space, Photo Tour, Check-in & Out, Status & Preferences, Ready to Submit.
   - Photo uploader to Supabase Storage bucket `apartment-images`, track `property_images` rows (is_primary, display_order, image_url).
   - Submit creates/updates the `properties` row and image rows; activates listing if chosen.
+  - Location picker: Google Maps with draggable marker and search (Places Autocomplete) to set `latitude`/`longitude` on the property.
 
 DATABASE SCHEMA
 Use or migrate to the following schema (normalize where possible):
@@ -64,6 +66,8 @@ Table public.properties
 - building_age int
 - unit_size numeric
 - unit_size_unit text
+- latitude numeric                               -- optional; set via map picker
+- longitude numeric                              -- optional; set via map picker
 - created_at timestamptz default now()
 - updated_at timestamptz default now()
 
@@ -147,6 +151,7 @@ APIs (Node/Express)
 CLIENT DATA BINDING RULES
 - Customer listing feed: query `properties where active = true order by created_at desc` and join primary image via `property_images` (is_primary desc, display_order).
 - Property details: `properties by id`, fetch ordered images, fetch amenities via `property_amenities join amenities`.
+ - If `latitude` and `longitude` are present, render a Google Map centered on the property with a marker; fall back to city-level map or hide map if missing.
 - Admin listings: read/write `properties.active` as the status badge source of truth.
 - Image uploader: uploads to `apartment-images`, then inserts into `property_images` with `is_primary/display_order`.
 
@@ -163,6 +168,7 @@ STRIPE INTEGRATION
 ENV & CONFIG (no deployment)
 - .env (server): STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_ROLE_KEY (server-only), SUPABASE_URL
 - .env (client): VITE_STRIPE_PUBLISHABLE_KEY, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+  - Add: VITE_GOOGLE_MAPS_API_KEY (browser key restricted to localhost during dev)
 - Provide local scripts: `npm run dev` (client), `npm run server` (api), `npm run db:types` (optional codegen), `npm run test`.
 
 INTERACTIVE TEST PLAN (E2E)
@@ -172,6 +178,7 @@ Customer flows
 1. Home loads, listings grid shows only active properties from DB.
 2. Search by city; grid filters accordingly.
 3. Open property details, gallery arrows work, amenities visible.
+4. Map is visible with a marker at the property's coordinates; map controls work (zoom/pan).
 4. Choose dates/guests; total reflects nights x base price + fees; click Book.
 5. Redirect to Stripe Checkout; simulate successful test card; return to success page.
 6. Booking record appears in DB; status = confirmed; success page shows summary.
@@ -198,6 +205,7 @@ SECURITY
 - Do NOT commit any keys. Always read from environment variables.
 - Apply RLS as defined; never use service role from the client.
 - Sanitize any user-supplied text fields, limit file types for uploads (jpeg/png/webp), limit max image size.
+ - Restrict Google Maps API key by HTTP referrer; do not embed unrestricted keys in code.
 
 DELIVERABLES
 - Complete full-stack project with:
