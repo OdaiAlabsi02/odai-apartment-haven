@@ -17,6 +17,10 @@ export default async function handler(req, res) {
       successUrl,
       cancelUrl,
       customerId,
+      checkInDate,
+      checkOutDate,
+      guestName,
+      guestEmail
     } = req.body || {};
 
     if (!unitAmountJod || !nights) {
@@ -44,6 +48,14 @@ export default async function handler(req, res) {
       automatic_tax: { enabled: false },
       success_url: successUrl || `${req.headers.origin}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl || `${req.headers.origin}/apartment/${String(propertyId || '')}`,
+      metadata: {
+        propertyId: String(propertyId || ''),
+        nights: String(nights || ''),
+        checkInDate: checkInDate || '',
+        checkOutDate: checkOutDate || '',
+        guestName: guestName || '',
+        guestEmail: guestEmail || ''
+      }
     });
 
     return res.status(200).json({ id: session.id, url: session.url });
